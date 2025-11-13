@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nutritional Insights - Cloud Native Application</title>
+    <!-- Tailwind CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.0/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <!-- Papa Parse for CSV parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-lg shadow-xl text-center">
+            <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
+            <h2 class="text-xl font-semibold mb-2">Loading Data from CSV...</h2>
+            <p class="text-gray-600" id="loadingStatus">Fetching All_Diets.csv from Kaggle dataset</p>
+        </div>
+    </div>
+
+    <header class="bg-blue-600 p-4 text-white">
+        <h1 class="text-3xl font-semibold">Nutritional Insights</h1>
+        <p class="text-sm mt-1">Cloud-Native Data Pipeline | Dynamic CSV Loading</p>
+    </header>
+
+    <main class="container mx-auto p-6">
+        <!-- Data Source Info -->
+        <section class="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 class="font-semibold text-blue-800 mb-2">📊 Data Source</h3>
+            <p class="text-sm text-blue-700" id="dataSourceInfo">Loading from: All_Diets.csv</p>
+            <p class="text-xs text-blue-600 mt-1" id="recordCount">Processing records...</p>
+        </section>
+
+        <!-- Explore Nutritional Insights -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Explore Nutritional Insights</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-4 shadow-lg rounded-lg">
+                    <h3 class="font-semibold">Bar Chart</h3>
+                    <p class="text-sm text-gray-600">Average macronutrient content by diet type.</p>
+                    <div style="position: relative; height: 200px; width: 100%;">
+                        <canvas id="barChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 shadow-lg rounded-lg">
+                    <h3 class="font-semibold">Scatter Plot</h3>
+                    <p class="text-sm text-gray-600">Nutrient relationships (protein vs carbs).</p>
+                    <div style="position: relative; height: 200px; width: 100%;">
+                        <canvas id="scatterPlot"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 shadow-lg rounded-lg">
+                    <h3 class="font-semibold">Heatmap</h3>
+                    <p class="text-sm text-gray-600">Nutrient correlations.</p>
+                    <div id="heatmap" class="w-full h-48 flex items-center justify-center">
+                        <div class="grid grid-cols-3 gap-1 text-center">
+                            <div class="w-12 h-12 flex items-center justify-center text-white text-xs font-bold rounded" style="background-color: rgba(59, 130, 246, 1.0);">1.00</div>
+                            <div class="w-12 h-12 flex items-center justify-center text-white text-xs font-bold rounded" style="background-color: rgba(59, 130, 246, 0.45);">-0.45</div>
+                            <div class="w-12 h-12 flex items-center justify-center text-white text-xs font-bold rounded" style="background-color: rgba(59, 130, 246, 0.32);">-0.32</div>
+                            <div class="w-12 h-12 flex items-center justify-center text-white text-xs font-bold rounded" style="background-color: rgba(59, 130, 246, 0.45);">-0.45</div>
+                            <div class="w-12 h-12 flex items-center justify-center text-white text-xs font-bold rounded" style="background-color: rgba(59, 130, 246, 1.0);">1.00</div>
+                            <div class="w-12 h-12 flex items-center justify-center text-white text-xs font-bold rounded" style="background-color: rgba(59, 130, 246, 0.78);">0.78</div>
+                            <div class="w-12 h-12 flex items-center justify-center text-white text-xs font-bold rounded" style="background-color: rgba(59, 130, 246, 0.32);">-0.32</div>
+                            <div class="w-12 h-12 flex items-center justify-center text-white text-xs font-bold rounded" style="background-color: rgba(59, 130, 246, 0.78);">0.78</div>
+                            <div class="w-12 h-12 flex items-center justify-center text-white text-xs font-bold rounded" style="background-color: rgba(59, 130, 246, 1.0);">1.00</div>
+                        </div>
+                    </div>
+                    <div class="flex justify-around mt-2 text-xs">
+                        <span>Protein</span>
+                        <span>Carbs</span>
+                        <span>Fat</span>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 shadow-lg rounded-lg">
+                    <h3 class="font-semibold">Pie Chart</h3>
+                    <p class="text-sm text-gray-600">Recipe distribution by diet type.</p>
+                    <div style="position: relative; height: 200px; width: 100%;">
+                        <canvas id="pieChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filters and Data Interaction -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Filters and Data Interaction</h2>
+            <div class="flex flex-wrap gap-4">
+                <input type="text" id="searchInput" placeholder="Search by Diet Type" class="p-2 border rounded w-full sm:w-auto">
+                <select id="dietSelect" class="p-2 border rounded w-full sm:w-auto">
+                    <option value="all">All Diet Types</option>
+                    <option value="vegan">Vegan</option>
+                    <option value="keto">Keto</option>
+                    <option value="paleo">Paleo</option>
+                    <option value="mediterranean">Mediterranean</option>
+                    <option value="dash">Dash</option>
+                </select>
+            </div>
+        </section>
+
+        <!-- API Data Interaction -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">API Data Interaction</h2>
+            <div class="flex flex-wrap gap-4">
+                <button onclick="getNutritionalInsights()" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">Get Nutritional Insights</button>
+                <button onclick="getRecipes()" class="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700">Get Recipes</button>
+                <button onclick="getClusters()" class="bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700">Get Clusters</button>
+            </div>
+            
+            <div id="apiResponse" class="mt-4 p-4 bg-green-50 border border-green-200 rounded hidden">
+                <h3 class="font-semibold text-green-800 mb-2">API Response</h3>
+                <div class="text-sm text-gray-700">
+                    <p><strong>Status:</strong> success</p>
+                    <p><strong>Message:</strong> Processed nutritional data from CSV</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Data Table -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Data Table</h2>
+            <div class="bg-white p-4 shadow-lg rounded-lg overflow-x-auto">
+                <table class="min-w-full table-auto">
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="px-4 py-2 text-left">Diet Type</th>
+                            <th class="px-4 py-2 text-left">Protein (g)</th>
+                            <th class="px-4 py-2 text-left">Carbs (g)</th>
+                            <th class="px-4 py-2 text-left">Fat (g)</th>
+                            <th class="px-4 py-2 text-left">Recipes</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody">
+                    </tbody>
+                </table>
+            </div>
+            <div class="flex justify-center gap-2 mt-4" id="paginationControls">
+            </div>
+        </section>
+
+        <!-- Security & Compliance -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Security & Compliance</h2>
+            <div class="bg-white p-4 shadow-lg rounded-lg">
+                <h3 class="font-semibold mb-3">Security Status</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                        <div>
+                            <p class="text-sm font-semibold">Encryption</p>
+                            <p class="text-xs text-gray-600">AES-256 Enabled</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                        <div>
+                            <p class="text-sm font-semibold">Access Control</p>
+                            <p class="text-xs text-gray-600">Role-Based (RBAC)</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                        <div>
+                            <p class="text-sm font-semibold">Compliance</p>
+                            <p class="text-xs text-gray-600">GDPR Compliant</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- OAuth / 2FA Integration -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">OAuth & 2FA Integration</h2>
+            <div class="bg-white p-4 shadow-lg rounded-lg">
+                <h3 class="font-semibold mb-3">Secure Login</h3>
+                <div class="flex flex-wrap gap-4 mb-4">
+                    <button class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        Login with Google
+                    </button>
+                    <button class="bg-gray-800 text-white py-2 px-4 rounded hover:bg-gray-900 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                        Login with GitHub
+                    </button>
+                </div>
+                <div class="mt-4">
+                    <label for="2fa" class="block text-sm text-gray-600 mb-2">Two-Factor Authentication</label>
+                    <div class="flex gap-2">
+                        <input id="2fa" type="text" class="p-2 border rounded flex-1" placeholder="Enter your 6-digit 2FA code" maxlength="6">
+                        <button class="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700">Verify</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cloud Resource Cleanup -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Cloud Resource Management</h2>
+            <div class="bg-white p-4 shadow-lg rounded-lg">
+                <p class="text-sm text-gray-600 mb-4">Manage Azure Blob Storage, compute resources, and serverless functions efficiently.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="border rounded p-3">
+                        <p class="font-semibold text-sm">Azure Blob Storage</p>
+                        <p class="text-xs text-gray-600">Container: datasets</p>
+                        <p class="text-xs text-green-600">Status: Active</p>
+                    </div>
+                    <div class="border rounded p-3">
+                        <p class="font-semibold text-sm">Lambda Function</p>
+                        <p class="text-xs text-gray-600">Processing: All_Diets.csv</p>
+                        <p class="text-xs text-green-600">Status: Running</p>
+                    </div>
+                </div>
+                <button onclick="cleanupResources()" class="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700">Clean Up Resources</button>
+                <div id="cleanupStatus" class="mt-3 hidden"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-blue-600 p-4 text-white text-center mt-10">
+        <p>&copy; 2025 Nutritional Insights. All Rights Reserved.</p>
+        <p class="mt-2 font-semibold">Group 7</p>
+        <p class="mt-1">Annie · Komalpreet · Rhailyn Jane</p>
+    </footer>
+
+    <script>
+        // Global variables
+        let dietTypesData = [];
+        let topProteinRecipes = [];
+        let rawCSVData = [];
+        let filteredData = [];
+        let currentPage = 1;
+        const itemsPerPage = 3;
+        
+        // Chart objects (will be initialized after data loads)
+        let barChart, scatterChart, pieChart;
+
+        // Load and process CSV data
+        async function loadCSVData() {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const loadingStatus = document.getElementById('loadingStatus');
+            
+            try {
+                loadingStatus.textContent = 'Fetching All_Diets.csv...';
+                
+                // Fetch the CSV file
+                const response = await fetch('All_Diets.csv');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const csvText = await response.text();
+                
+                loadingStatus.textContent = 'Parsing CSV data...';
+                
+                // Parse CSV with Papa Parse
+                Papa.parse(csvText, {
+                    header: true,
+                    dynamicTyping: true,
+                    skipEmptyLines: true,
+                    complete: function(results) {
+                        rawCSVData = results.data;
+                        
+                        loadingStatus.textContent = 'Processing nutritional data...';
+                        
+                        // Process the data
+                        processCSVData(rawCSVData);
+                        
+                        // Update UI
+                        document.getElementById('recordCount').textContent = 
+                            `✓ Loaded ${rawCSVData.length} recipes from CSV`;
+                        
+                        loadingStatus.textContent = 'Initializing charts...';
+                        
+                        // Initialize everything
+                        initializeCharts();
+                        filteredData = [...dietTypesData];
+                        renderTable();
+                        
+                        // Hide loading overlay
+                        setTimeout(() => {
+                            loadingOverlay.style.display = 'none';
+                        }, 500);
+                    },
+                    error: function(error) {
+                        console.error('Error parsing CSV:', error);
+                        loadingStatus.textContent = 'Error parsing CSV file';
+                        loadingStatus.classList.add('text-red-600');
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Error loading CSV:', error);
+                loadingStatus.textContent = `Error: ${error.message}. Make sure All_Diets.csv is in the same directory.`;
+                loadingStatus.classList.add('text-red-600');
+            }
+        }
+
+        // Process CSV data to calculate averages
+        function processCSVData(data) {
+            // Group data by diet type
+            const dietGroups = {};
+            
+            data.forEach(row => {
+                const dietType = row.Diet_type;
+                
+                if (!dietGroups[dietType]) {
+                    dietGroups[dietType] = {
+                        proteinSum: 0,
+                        carbsSum: 0,
+                        fatSum: 0,
+                        count: 0,
+                        recipes: []
+                    };
+                }
+                
+                dietGroups[dietType].proteinSum += row['Protein(g)'] || 0;
+                dietGroups[dietType].carbsSum += row['Carbs(g)'] || 0;
+                dietGroups[dietType].fatSum += row['Fat(g)'] || 0;
+                dietGroups[dietType].count++;
+                dietGroups[dietType].recipes.push(row);
+            });
+            
+            // Calculate averages
+            dietTypesData = Object.keys(dietGroups).map(dietType => {
+                const group = dietGroups[dietType];
+                return {
+                    Diet_type: dietType,
+                    Protein: group.proteinSum / group.count,
+                    Carbs: group.carbsSum / group.count,
+                    Fat: group.fatSum / group.count,
+                    recipes: group.count
+                };
+            });
+            
+            // Get top 5 protein-rich recipes
+            const sortedByProtein = [...data]
+                .filter(row => row['Protein(g)'] > 0)
+                .sort((a, b) => b['Protein(g)'] - a['Protein(g)'])
+                .slice(0, 10);
+            
+            topProteinRecipes = sortedByProtein.map(row => ({
+                recipe: row.Recipe_name || 'Unknown',
+                protein: row['Protein(g)'],
+                carbs: row['Carbs(g)'],
+                diet: row.Diet_type
+            }));
+            
+            console.log('Processed Diet Data:', dietTypesData);
+            console.log('Top Protein Recipes:', topProteinRecipes);
+        }
+
+        // Initialize all charts
+        function initializeCharts() {
+            // Initialize Bar Chart
+            const barCtx = document.getElementById('barChart').getContext('2d');
+            barChart = new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: dietTypesData.map(d => d.Diet_type),
+                    datasets: [
+                        {
+                            label: 'Protein (g)',
+                            data: dietTypesData.map(d => d.Protein),
+                            backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Carbs (g)',
+                            data: dietTypesData.map(d => d.Carbs),
+                            backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Fat (g)',
+                            data: dietTypesData.map(d => d.Fat),
+                            backgroundColor: 'rgba(251, 146, 60, 0.7)',
+                            borderColor: 'rgba(251, 146, 60, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+
+            // Initialize Scatter Plot
+            const scatterCtx = document.getElementById('scatterPlot').getContext('2d');
+            scatterChart = new Chart(scatterCtx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Top Protein Recipes',
+                        data: topProteinRecipes.map(r => ({ x: r.protein, y: r.carbs })),
+                        backgroundColor: 'rgba(139, 92, 246, 0.7)',
+                        borderColor: 'rgba(139, 92, 246, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { 
+                            title: { display: true, text: 'Protein (g)' },
+                            beginAtZero: true
+                        },
+                        y: { 
+                            title: { display: true, text: 'Carbs (g)' },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Initialize Pie Chart
+            const pieCtx = document.getElementById('pieChart').getContext('2d');
+            pieChart = new Chart(pieCtx, {
+                type: 'pie',
+                data: {
+                    labels: dietTypesData.map(d => d.Diet_type),
+                    datasets: [{
+                        data: dietTypesData.map(d => d.recipes),
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.7)',
+                            'rgba(16, 185, 129, 0.7)',
+                            'rgba(251, 146, 60, 0.7)',
+                            'rgba(139, 92, 246, 0.7)',
+                            'rgba(236, 72, 153, 0.7)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        // API Functions
+        function getNutritionalInsights() {
+            const response = document.getElementById('apiResponse');
+            response.classList.remove('hidden');
+            
+            const highestProtein = dietTypesData.reduce((max, diet) => 
+                diet.Protein > max.Protein ? diet : max
+            );
+            
+            response.innerHTML = `
+                <h3 class="font-semibold text-green-800 mb-2">✓ Nutritional Insights Retrieved</h3>
+                <div class="text-sm text-gray-700">
+                    <p><strong>Status:</strong> Success</p>
+                    <p><strong>Source:</strong> All_Diets.csv (Dynamically Loaded)</p>
+                    <p><strong>Records Processed:</strong> ${rawCSVData.length} recipes</p>
+                    <p><strong>Diet Types:</strong> ${dietTypesData.length} (${dietTypesData.map(d => d.Diet_type).join(', ')})</p>
+                    <p><strong>Highest Protein Diet:</strong> ${highestProtein.Diet_type} (${highestProtein.Protein.toFixed(2)}g avg)</p>
+                    <p><strong>Loading Method:</strong> Papa Parse CSV Parser</p>
+                </div>
+            `;
+        }
+
+        function getRecipes() {
+            const response = document.getElementById('apiResponse');
+            response.classList.remove('hidden');
+            
+            const totalRecipes = dietTypesData.reduce((sum, d) => sum + d.recipes, 0);
+            const avgProtein = dietTypesData.reduce((sum, d) => sum + d.Protein, 0) / dietTypesData.length;
+            const avgCarbs = dietTypesData.reduce((sum, d) => sum + d.Carbs, 0) / dietTypesData.length;
+            const avgFat = dietTypesData.reduce((sum, d) => sum + d.Fat, 0) / dietTypesData.length;
+            
+            response.innerHTML = `
+                <h3 class="font-semibold text-green-800 mb-2">✓ Recipes Retrieved</h3>
+                <div class="text-sm text-gray-700">
+                    <p><strong>Status:</strong> Success</p>
+                    <p><strong>Total Recipes:</strong> ${totalRecipes}</p>
+                    <p><strong>Average Protein:</strong> ${avgProtein.toFixed(1)}g</p>
+                    <p><strong>Average Carbs:</strong> ${avgCarbs.toFixed(1)}g</p>
+                    <p><strong>Average Fat:</strong> ${avgFat.toFixed(1)}g</p>
+                    <p><strong>Data Source:</strong> CSV File</p>
+                </div>
+            `;
+        }
+
+        function getClusters() {
+            const response = document.getElementById('apiResponse');
+            response.classList.remove('hidden');
+            
+            const highProtein = dietTypesData.filter(d => d.Protein > 90).map(d => d.Diet_type);
+            const highCarb = dietTypesData.filter(d => d.Carbs > 200).map(d => d.Diet_type);
+            const balanced = dietTypesData.filter(d => d.Protein < 90 && d.Carbs < 200).map(d => d.Diet_type);
+            
+            response.innerHTML = `
+                <h3 class="font-semibold text-green-800 mb-2">✓ Cluster Analysis Complete</h3>
+                <div class="text-sm text-gray-700">
+                    <p><strong>Status:</strong> Success</p>
+                    <p><strong>Clusters Identified:</strong> ${dietTypesData.length}</p>
+                    <p><strong>High Protein:</strong> ${highProtein.join(', ') || 'None'}</p>
+                    <p><strong>High Carb:</strong> ${highCarb.join(', ') || 'None'}</p>
+                    <p><strong>Balanced:</strong> ${balanced.join(', ') || 'None'}</p>
+                    <p><strong>Algorithm:</strong> K-Means Clustering (Simulated)</p>
+                </div>
+            `;
+        }
+
+        function cleanupResources() {
+            const status = document.getElementById('cleanupStatus');
+            status.classList.remove('hidden');
+            status.innerHTML = `
+                <div class="bg-yellow-50 border border-yellow-200 rounded p-3">
+                    <p class="text-sm text-yellow-800"><strong>⚠️ Cleanup in Progress...</strong></p>
+                    <p class="text-xs text-yellow-700 mt-1">Terminating CSV connections...</p>
+                    <p class="text-xs text-yellow-700">Releasing compute resources...</p>
+                </div>
+            `;
+            
+            setTimeout(() => {
+                status.innerHTML = `
+                    <div class="bg-green-50 border border-green-200 rounded p-3">
+                        <p class="text-sm text-green-800"><strong>✓ Cleanup Complete</strong></p>
+                        <p class="text-xs text-green-700 mt-1">All resources successfully released</p>
+                        <p class="text-xs text-green-700">Cost savings: $12.50/month</p>
+                    </div>
+                `;
+            }, 2000);
+        }
+
+        // Update charts based on filtered data
+        function updateCharts(data) {
+            if (barChart && scatterChart && pieChart) {
+                barChart.data.labels = data.map(d => d.Diet_type);
+                barChart.data.datasets[0].data = data.map(d => d.Protein);
+                barChart.data.datasets[1].data = data.map(d => d.Carbs);
+                barChart.data.datasets[2].data = data.map(d => d.Fat);
+                barChart.update();
+
+                pieChart.data.labels = data.map(d => d.Diet_type);
+                pieChart.data.datasets[0].data = data.map(d => d.recipes);
+                pieChart.update();
+            }
+        }
+
+        // Filter functionality
+        document.getElementById('searchInput').addEventListener('input', filterData);
+        document.getElementById('dietSelect').addEventListener('change', filterData);
+
+        function filterData() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const selectedDiet = document.getElementById('dietSelect').value;
+            
+            filteredData = dietTypesData.filter(item => {
+                const matchesSearch = item.Diet_type.toLowerCase().includes(searchTerm);
+                const matchesDiet = selectedDiet === 'all' || item.Diet_type.toLowerCase() === selectedDiet;
+                return matchesSearch && matchesDiet;
+            });
+
+            currentPage = 1;
+            updateCharts(filteredData);
+            renderTable();
+        }
+
+        // Render table with pagination
+        function renderTable() {
+            const tableBody = document.getElementById('dataTableBody');
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageData = filteredData.slice(startIndex, endIndex);
+
+            tableBody.innerHTML = '';
+
+            pageData.forEach(item => {
+                const row = document.createElement('tr');
+                row.className = 'border-b hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="px-4 py-2">${item.Diet_type}</td>
+                    <td class="px-4 py-2">${item.Protein.toFixed(2)}</td>
+                    <td class="px-4 py-2">${item.Carbs.toFixed(2)}</td>
+                    <td class="px-4 py-2">${item.Fat.toFixed(2)}</td>
+                    <td class="px-4 py-2">${item.recipes}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            renderPagination();
+        }
+
+        // Render pagination controls
+        function renderPagination() {
+            const paginationControls = document.getElementById('paginationControls');
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+            paginationControls.innerHTML = '';
+
+            const prevButton = document.createElement('button');
+            prevButton.textContent = 'Previous';
+            prevButton.className = `px-3 py-1 rounded ${currentPage === 1 ? 'bg-gray-200 cursor-not-allowed' : 'bg-gray-300 hover:bg-gray-400'}`;
+            prevButton.disabled = currentPage === 1;
+            prevButton.onclick = () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderTable();
+                }
+            };
+            paginationControls.appendChild(prevButton);
+
+            for (let i = 1; i <= totalPages; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.textContent = i;
+                pageButton.className = `px-3 py-1 rounded ${i === currentPage ? 'bg-blue-600 text-white' : 'bg-gray-300 hover:bg-gray-400'}`;
+                pageButton.onclick = () => {
+                    currentPage = i;
+                    renderTable();
+                };
+                paginationControls.appendChild(pageButton);
+            }
+
+            const nextButton = document.createElement('button');
+            nextButton.textContent = 'Next';
+            nextButton.className = `px-3 py-1 rounded ${currentPage === totalPages ? 'bg-gray-200 cursor-not-allowed' : 'bg-gray-300 hover:bg-gray-400'}`;
+            nextButton.disabled = currentPage === totalPages;
+            nextButton.onclick = () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderTable();
+                }
+            };
+            paginationControls.appendChild(nextButton);
+        }
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCSVData();
+        });
+    </script>
+
+</body>
+</html>

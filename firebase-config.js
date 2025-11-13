@@ -1,11 +1,6 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+// Firebase Configuration
+// Using Firebase Compat SDK (works with CDN)
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyCFumPPE-H6pPzr9XSkfIgEowEMzjOzneI",
   authDomain: "nutritional-insights.firebaseapp.com",
@@ -17,8 +12,10 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+firebase.initializeApp(firebaseConfig);
+
+// Initialize services
+const auth = firebase.auth();
 const db = firebase.firestore();
 
 // Enable persistence for offline support

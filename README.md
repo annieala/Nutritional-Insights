@@ -2,9 +2,6 @@
 
 > A secure, scalable web application for nutritional data analysis with enterprise-grade features including OAuth 2.0, RBAC, audit logging, and real-time data visualization.
 
-[![Live Demo](https://img.shields.io/badge/demo-live-green.svg)](#)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](#)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#)
 
 **🎯 Project Highlights:**
 - Processes **7,806 recipes** across 5 diet types with real-time analytics

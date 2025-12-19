@@ -8,6 +8,8 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.0/dist/tailwind.min.css" rel="stylesheet">
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <!-- Plotly.js CDN for animated charts -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <!-- Papa Parse for CSV -->
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
     
@@ -233,46 +235,25 @@
                 <h2 class="text-2xl font-semibold mb-4">Explore Nutritional Insights</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="bg-white p-4 shadow-lg rounded-lg">
-                        <h3 class="font-semibold">Bar Chart</h3>
+                        <h3 class="font-semibold">Bar Chart <span class="text-xs text-blue-500">(Plotly.js)</span></h3>
                         <p class="text-sm text-gray-600">Average macronutrient content by diet type.</p>
-                        <div style="position: relative; height: 200px; width: 100%;">
-                            <canvas id="barChart"></canvas>
-                        </div>
+                        <div id="barChart" style="width: 100%; height: 250px;"></div>
                     </div>
 
                     <div class="bg-white p-4 shadow-lg rounded-lg">
-                        <h3 class="font-semibold">Scatter Plot</h3>
+                        <h3 class="font-semibold">Scatter Plot <span class="text-xs text-blue-500">(Plotly.js)</span></h3>
                         <p class="text-sm text-gray-600">Nutrient relationships (protein vs carbs).</p>
-                        <div style="position: relative; height: 200px; width: 100%;">
-                            <canvas id="scatterPlot"></canvas>
-                        </div>
+                        <div id="scatterPlot" style="width: 100%; height: 250px;"></div>
                     </div>
 
                     <div class="bg-white p-4 shadow-lg rounded-lg">
-                        <h3 class="font-semibold">Heatmap</h3>
+                        <h3 class="font-semibold">Heatmap <span class="text-xs text-blue-500">(Plotly.js)</span></h3>
                         <p class="text-sm text-gray-600">Nutrient correlations.</p>
-                        <div id="heatmap" class="w-full h-48 flex items-center justify-center">
-                            <div class="grid grid-cols-3 gap-1 text-center">
-                                <div class="w-12 h-12 flex items-center justify-center text-white text-xs font-bold rounded" style="background-color: rgba(59, 130, 246, 1.0);">1.00</div>
-                                <div class="w-12 h-12 flex items-center justify-center text-white text-xs font-bold rounded" style="background-color: rgba(59, 130, 246, 0.45);">-0.45</div>
-                                <div class="w-12 h-12 flex items-center justify-center text-white text-xs font-bold rounded" style="background-color: rgba(59, 130, 246, 0.32);">-0.32</div>
-                                <div class="w-12 h-12 flex items-center justify-center text-white text-xs font-bold rounded" style="background-color: rgba(59, 130, 246, 0.45);">-0.45</div>
-                                <div class="w-12 h-12 flex items-center justify-center text-white text-xs font-bold rounded" style="background-color: rgba(59, 130, 246, 1.0);">1.00</div>
-                                <div class="w-12 h-12 flex items-center justify-center text-white text-xs font-bold rounded" style="background-color: rgba(59, 130, 246, 0.78);">0.78</div>
-                                <div class="w-12 h-12 flex items-center justify-center text-white text-xs font-bold rounded" style="background-color: rgba(59, 130, 246, 0.32);">-0.32</div>
-                                <div class="w-12 h-12 flex items-center justify-center text-white text-xs font-bold rounded" style="background-color: rgba(59, 130, 246, 0.78);">0.78</div>
-                                <div class="w-12 h-12 flex items-center justify-center text-white text-xs font-bold rounded" style="background-color: rgba(59, 130, 246, 1.0);">1.00</div>
-                            </div>
-                        </div>
-                        <div class="flex justify-around mt-2 text-xs">
-                            <span>Protein</span>
-                            <span>Carbs</span>
-                            <span>Fat</span>
-                        </div>
+                        <div id="heatmap" style="width: 100%; height: 250px;"></div>
                     </div>
 
                     <div class="bg-white p-4 shadow-lg rounded-lg">
-                        <h3 class="font-semibold">Pie Chart</h3>
+                        <h3 class="font-semibold">Pie Chart <span class="text-xs text-green-500">(Chart.js)</span></h3>
                         <p class="text-sm text-gray-600">Recipe distribution by diet type.</p>
                         <div style="position: relative; height: 200px; width: 100%;">
                             <canvas id="pieChart"></canvas>
@@ -668,57 +649,136 @@
         }
 
         function initializeCharts() {
-            const barCtx = document.getElementById('barChart').getContext('2d');
-            barChart = new Chart(barCtx, {
-                type: 'bar',
-                data: {
-                    labels: dietTypesData.map(d => d.Diet_type),
-                    datasets: [{
-                        label: 'Protein (g)',
-                        data: dietTypesData.map(d => d.Protein),
-                        backgroundColor: 'rgba(59, 130, 246, 0.7)'
-                    }, {
-                        label: 'Carbs (g)',
-                        data: dietTypesData.map(d => d.Carbs),
-                        backgroundColor: 'rgba(16, 185, 129, 0.7)'
-                    }, {
-                        label: 'Fat (g)',
-                        data: dietTypesData.map(d => d.Fat),
-                        backgroundColor: 'rgba(251, 146, 60, 0.7)'
-                    }]
+            // ============================================
+            // BAR CHART - Plotly.js with animations
+            // ============================================
+            const barData = [
+                {
+                    x: dietTypesData.map(d => d.Diet_type),
+                    y: dietTypesData.map(d => d.Protein),
+                    name: 'Protein (g)',
+                    type: 'bar',
+                    marker: { color: 'rgba(59, 130, 246, 0.8)' }
                 },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-
-            // Initialize Scatter Plot
-            const scatterCtx = document.getElementById('scatterPlot').getContext('2d');
-            scatterChart = new Chart(scatterCtx, {
-                type: 'scatter',
-                data: {
-                    datasets: [{
-                        label: 'Top Protein Recipes',
-                        data: topProteinRecipes.map(r => ({ x: r.protein, y: r.carbs })),
-                        backgroundColor: 'rgba(139, 92, 246, 0.7)',
-                        borderColor: 'rgba(139, 92, 246, 1)',
-                        borderWidth: 1
-                    }]
+                {
+                    x: dietTypesData.map(d => d.Diet_type),
+                    y: dietTypesData.map(d => d.Carbs),
+                    name: 'Carbs (g)',
+                    type: 'bar',
+                    marker: { color: 'rgba(16, 185, 129, 0.8)' }
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: { 
-                            title: { display: true, text: 'Protein (g)' },
-                            beginAtZero: true
-                        },
-                        y: { 
-                            title: { display: true, text: 'Carbs (g)' },
-                            beginAtZero: true
-                        }
-                    }
+                {
+                    x: dietTypesData.map(d => d.Diet_type),
+                    y: dietTypesData.map(d => d.Fat),
+                    name: 'Fat (g)',
+                    type: 'bar',
+                    marker: { color: 'rgba(251, 146, 60, 0.8)' }
                 }
+            ];
+
+            const barLayout = {
+                barmode: 'group',
+                margin: { t: 30, r: 20, b: 40, l: 50 },
+                legend: { orientation: 'h', y: -0.2 },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { size: 10 }
+            };
+
+            const barConfig = {
+                responsive: true,
+                displayModeBar: false,
+                staticPlot: false
+            };
+
+            Plotly.newPlot('barChart', barData, barLayout, barConfig).then(() => {
+                // Animate bars growing from zero
+                Plotly.animate('barChart', {
+                    data: barData,
+                    traces: [0, 1, 2],
+                    layout: {}
+                }, {
+                    transition: { duration: 800, easing: 'cubic-in-out' },
+                    frame: { duration: 800 }
+                });
             });
 
+            // ============================================
+            // SCATTER PLOT - Plotly.js with animations
+            // ============================================
+            const scatterData = [{
+                x: topProteinRecipes.map(r => r.protein),
+                y: topProteinRecipes.map(r => r.carbs),
+                mode: 'markers',
+                type: 'scatter',
+                name: 'Top Protein Recipes',
+                text: topProteinRecipes.map(r => `${r.recipe}<br>Diet: ${r.diet}`),
+                hoverinfo: 'text+x+y',
+                marker: {
+                    size: 12,
+                    color: topProteinRecipes.map(r => r.protein),
+                    colorscale: 'Viridis',
+                    showscale: true,
+                    colorbar: { title: 'Protein', thickness: 15 }
+                }
+            }];
+
+            const scatterLayout = {
+                margin: { t: 30, r: 60, b: 50, l: 50 },
+                xaxis: { title: 'Protein (g)', zeroline: false },
+                yaxis: { title: 'Carbs (g)', zeroline: false },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { size: 10 },
+                hovermode: 'closest'
+            };
+
+            Plotly.newPlot('scatterPlot', scatterData, scatterLayout, { responsive: true, displayModeBar: false });
+
+            // ============================================
+            // HEATMAP - Plotly.js with animations
+            // ============================================
+            const nutrients = ['Protein', 'Carbs', 'Fat'];
+            const correlationMatrix = [
+                [1.00, -0.45, -0.32],
+                [-0.45, 1.00, 0.78],
+                [-0.32, 0.78, 1.00]
+            ];
+
+            const heatmapData = [{
+                z: correlationMatrix,
+                x: nutrients,
+                y: nutrients,
+                type: 'heatmap',
+                colorscale: [
+                    [0, 'rgb(220, 38, 38)'],
+                    [0.5, 'rgb(255, 255, 255)'],
+                    [1, 'rgb(37, 99, 235)']
+                ],
+                zmin: -1,
+                zmax: 1,
+                text: correlationMatrix.map(row => row.map(val => val.toFixed(2))),
+                texttemplate: '%{text}',
+                textfont: { size: 14, color: 'black' },
+                hovertemplate: '%{x} vs %{y}: %{z:.2f}<extra></extra>',
+                showscale: true,
+                colorbar: { title: 'Correlation', thickness: 15 }
+            }];
+
+            const heatmapLayout = {
+                margin: { t: 30, r: 80, b: 50, l: 60 },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { size: 11 },
+                xaxis: { side: 'bottom' },
+                yaxis: { autorange: 'reversed' }
+            };
+
+            Plotly.newPlot('heatmap', heatmapData, heatmapLayout, { responsive: true, displayModeBar: false });
+
+            // ============================================
+            // PIE CHART - Chart.js (kept as is)
+            // ============================================
             const pieCtx = document.getElementById('pieChart').getContext('2d');
             pieChart = new Chart(pieCtx, {
                 type: 'pie',
@@ -726,10 +786,29 @@
                     labels: dietTypesData.map(d => d.Diet_type),
                     datasets: [{
                         data: dietTypesData.map(d => d.recipes),
-                        backgroundColor: ['rgba(59, 130, 246, 0.7)', 'rgba(16, 185, 129, 0.7)', 'rgba(251, 146, 60, 0.7)', 'rgba(139, 92, 246, 0.7)', 'rgba(236, 72, 153, 0.7)']
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.8)',
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(251, 146, 60, 0.8)',
+                            'rgba(139, 92, 246, 0.8)',
+                            'rgba(236, 72, 153, 0.8)'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { padding: 10, font: { size: 10 } } }
+                    },
+                    animation: {
+                        animateRotate: true,
+                        animateScale: true,
+                        duration: 1000
+                    }
+                }
             });
         }
 
@@ -837,58 +916,80 @@
 
         // Update charts with nutrient focus
         function updateChartsWithFilters(data, nutrientFocus) {
-            if (!barChart || !pieChart) return;
+            // ============================================
+            // UPDATE BAR CHART (Plotly.js) with animation
+            // ============================================
+            let barTraces = [];
 
-            // Update bar chart based on nutrient focus
-            barChart.data.labels = data.map(d => d.Diet_type);
-            
             if (nutrientFocus === 'all') {
-                // Show all nutrients
-                barChart.data.datasets[0].data = data.map(d => d.Protein);
-                barChart.data.datasets[1].data = data.map(d => d.Carbs);
-                barChart.data.datasets[2].data = data.map(d => d.Fat);
-                barChart.data.datasets[0].hidden = false;
-                barChart.data.datasets[1].hidden = false;
-                barChart.data.datasets[2].hidden = false;
+                barTraces = [
+                    { x: data.map(d => d.Diet_type), y: data.map(d => d.Protein), name: 'Protein (g)', type: 'bar', marker: { color: 'rgba(59, 130, 246, 0.8)' } },
+                    { x: data.map(d => d.Diet_type), y: data.map(d => d.Carbs), name: 'Carbs (g)', type: 'bar', marker: { color: 'rgba(16, 185, 129, 0.8)' } },
+                    { x: data.map(d => d.Diet_type), y: data.map(d => d.Fat), name: 'Fat (g)', type: 'bar', marker: { color: 'rgba(251, 146, 60, 0.8)' } }
+                ];
             } else if (nutrientFocus === 'protein') {
-                // Show only protein
-                barChart.data.datasets[0].data = data.map(d => d.Protein);
-                barChart.data.datasets[0].hidden = false;
-                barChart.data.datasets[1].hidden = true;
-                barChart.data.datasets[2].hidden = true;
+                barTraces = [{ x: data.map(d => d.Diet_type), y: data.map(d => d.Protein), name: 'Protein (g)', type: 'bar', marker: { color: 'rgba(59, 130, 246, 0.8)' } }];
             } else if (nutrientFocus === 'carbs') {
-                // Show only carbs
-                barChart.data.datasets[1].data = data.map(d => d.Carbs);
-                barChart.data.datasets[0].hidden = true;
-                barChart.data.datasets[1].hidden = false;
-                barChart.data.datasets[2].hidden = true;
+                barTraces = [{ x: data.map(d => d.Diet_type), y: data.map(d => d.Carbs), name: 'Carbs (g)', type: 'bar', marker: { color: 'rgba(16, 185, 129, 0.8)' } }];
             } else if (nutrientFocus === 'fat') {
-                // Show only fat
-                barChart.data.datasets[2].data = data.map(d => d.Fat);
-                barChart.data.datasets[0].hidden = true;
-                barChart.data.datasets[1].hidden = true;
-                barChart.data.datasets[2].hidden = false;
+                barTraces = [{ x: data.map(d => d.Diet_type), y: data.map(d => d.Fat), name: 'Fat (g)', type: 'bar', marker: { color: 'rgba(251, 146, 60, 0.8)' } }];
             }
-            
-            barChart.update();
 
-            // Update pie chart
-            pieChart.data.labels = data.map(d => d.Diet_type);
-            pieChart.data.datasets[0].data = data.map(d => d.recipes);
-            pieChart.update();
+            Plotly.react('barChart', barTraces, {
+                barmode: 'group',
+                margin: { t: 30, r: 20, b: 40, l: 50 },
+                legend: { orientation: 'h', y: -0.2 },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { size: 10 },
+                transition: { duration: 500 }
+            });
 
-            // Update scatter plot if data available
-            if (scatterChart && topProteinRecipes.length > 0) {
+            // ============================================
+            // UPDATE PIE CHART (Chart.js)
+            // ============================================
+            if (pieChart) {
+                pieChart.data.labels = data.map(d => d.Diet_type);
+                pieChart.data.datasets[0].data = data.map(d => d.recipes);
+                pieChart.update();
+            }
+
+            // ============================================
+            // UPDATE SCATTER PLOT (Plotly.js) with animation
+            // ============================================
+            if (topProteinRecipes.length > 0) {
                 const filteredRecipes = topProteinRecipes.filter(recipe => {
                     if (currentFilters.dietType === 'all') return true;
                     return recipe.diet && recipe.diet.toLowerCase() === currentFilters.dietType;
                 });
-                
-                scatterChart.data.datasets[0].data = filteredRecipes.map(r => ({ 
-                    x: r.protein, 
-                    y: r.carbs 
-                }));
-                scatterChart.update();
+
+                const scatterUpdate = [{
+                    x: filteredRecipes.map(r => r.protein),
+                    y: filteredRecipes.map(r => r.carbs),
+                    mode: 'markers',
+                    type: 'scatter',
+                    name: 'Top Protein Recipes',
+                    text: filteredRecipes.map(r => `${r.recipe}<br>Diet: ${r.diet}`),
+                    hoverinfo: 'text+x+y',
+                    marker: {
+                        size: 12,
+                        color: filteredRecipes.map(r => r.protein),
+                        colorscale: 'Viridis',
+                        showscale: true,
+                        colorbar: { title: 'Protein', thickness: 15 }
+                    }
+                }];
+
+                Plotly.react('scatterPlot', scatterUpdate, {
+                    margin: { t: 30, r: 60, b: 50, l: 50 },
+                    xaxis: { title: 'Protein (g)', zeroline: false },
+                    yaxis: { title: 'Carbs (g)', zeroline: false },
+                    paper_bgcolor: 'rgba(0,0,0,0)',
+                    plot_bgcolor: 'rgba(0,0,0,0)',
+                    font: { size: 10 },
+                    hovermode: 'closest',
+                    transition: { duration: 500 }
+                });
             }
         }
 

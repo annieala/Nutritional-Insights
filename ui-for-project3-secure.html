@@ -6,6 +6,134 @@
     <title>Nutritional Insights - Secure Application</title>
     <!-- Tailwind CSS CDN -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.0/dist/tailwind.min.css" rel="stylesheet">
+
+    <!-- Dark Mode & Custom Styles -->
+    <style>
+        /* Dark mode transitions */
+        * {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        /* Dark mode body */
+        body.dark-mode {
+            background-color: #1a202c !important;
+            color: #e2e8f0 !important;
+        }
+
+        /* Dark mode for main app container */
+        body.dark-mode #mainApp {
+            background-color: #1a202c !important;
+        }
+
+        /* Dark mode cards and sections */
+        body.dark-mode .bg-white {
+            background-color: #2d3748 !important;
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-mode .bg-gray-100 {
+            background-color: #1a202c !important;
+        }
+
+        body.dark-mode .bg-gray-50 {
+            background-color: #2d3748 !important;
+        }
+
+        /* Dark mode text */
+        body.dark-mode .text-gray-800,
+        body.dark-mode .text-gray-700,
+        body.dark-mode .text-gray-600 {
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-mode .text-gray-500 {
+            color: #a0aec0 !important;
+        }
+
+        /* Dark mode borders */
+        body.dark-mode .border-gray-200,
+        body.dark-mode .border-gray-300 {
+            border-color: #4a5568 !important;
+        }
+
+        /* Dark mode inputs */
+        body.dark-mode input,
+        body.dark-mode select,
+        body.dark-mode textarea {
+            background-color: #4a5568 !important;
+            color: #e2e8f0 !important;
+            border-color: #718096 !important;
+        }
+
+        body.dark-mode input::placeholder {
+            color: #a0aec0 !important;
+        }
+
+        /* Dark mode tables */
+        body.dark-mode table {
+            background-color: #2d3748 !important;
+        }
+
+        body.dark-mode th {
+            background-color: #4a5568 !important;
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-mode td {
+            border-color: #4a5568 !important;
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-mode tr:hover {
+            background-color: #4a5568 !important;
+        }
+
+        /* Dark mode header */
+        body.dark-mode #mainHeader {
+            background-color: #1a202c !important;
+            border-bottom: 1px solid #4a5568;
+        }
+
+        /* Dark mode security section */
+        body.dark-mode .bg-green-50 {
+            background-color: #1c3a2d !important;
+            border-color: #2f855a !important;
+        }
+
+        body.dark-mode .bg-blue-50,
+        body.dark-mode .bg-purple-50,
+        body.dark-mode .bg-orange-50 {
+            background-color: #2d3748 !important;
+        }
+
+        /* Dark mode shadow */
+        body.dark-mode .shadow,
+        body.dark-mode .shadow-lg,
+        body.dark-mode .shadow-2xl {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.4) !important;
+        }
+
+        /* Zoom container */
+        #zoomContainer {
+            transform-origin: top center;
+            transition: transform 0.3s ease;
+        }
+
+        /* Dark mode login section */
+        body.dark-mode #loginSection {
+            background: linear-gradient(to bottom right, #1a202c, #2d3748) !important;
+        }
+
+        body.dark-mode #loginSection .bg-white {
+            background-color: #2d3748 !important;
+        }
+
+        /* Plotly chart dark mode backgrounds */
+        body.dark-mode .js-plotly-plot .plotly .bg {
+            fill: transparent !important;
+        }
+    </style>
+
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <!-- Plotly.js CDN for animated charts -->
@@ -156,19 +284,53 @@
         </div>
 
         <!-- Header with User Info -->
-        <header class="bg-blue-600 p-4 text-white">
+        <header id="mainHeader" class="bg-blue-600 p-4 text-white dark:bg-gray-800 transition-colors duration-300">
             <div class="container mx-auto flex justify-between items-center">
                 <div>
                     <h1 class="text-3xl font-semibold">Nutritional Insights</h1>
                     <p class="text-sm mt-1">Secure Cloud-Native Application</p>
                 </div>
-                <div id="userInfo" class="text-right">
-                    <!-- User info will be populated by auth-manager.js -->
+
+                <!-- Controls: Dark Mode & Zoom -->
+                <div class="flex items-center space-x-4">
+                    <!-- Zoom Controls -->
+                    <div class="flex items-center space-x-2 bg-white/20 rounded-lg px-3 py-1">
+                        <button onclick="zoomOut()" class="text-white hover:text-yellow-300 transition" title="Zoom Out">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"/>
+                            </svg>
+                        </button>
+                        <span id="zoomLevel" class="text-sm font-mono">100%</span>
+                        <button onclick="zoomIn()" class="text-white hover:text-yellow-300 transition" title="Zoom In">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"/>
+                            </svg>
+                        </button>
+                        <button onclick="resetZoom()" class="text-xs text-white/70 hover:text-white ml-1" title="Reset Zoom">
+                            Reset
+                        </button>
+                    </div>
+
+                    <!-- Dark/Light Mode Toggle -->
+                    <button onclick="toggleDarkMode()" id="darkModeToggle"
+                            class="flex items-center space-x-2 bg-white/20 hover:bg-white/30 rounded-lg px-3 py-2 transition"
+                            title="Toggle Dark/Light Mode">
+                        <span id="darkModeIcon">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
+                            </svg>
+                        </span>
+                        <span id="darkModeText" class="text-sm hidden sm:inline">Dark</span>
+                    </button>
+
+                    <div id="userInfo" class="text-right">
+                        <!-- User info will be populated by auth-manager.js -->
+                    </div>
                 </div>
             </div>
         </header>
 
-        <main class="container mx-auto p-6">
+        <main id="zoomContainer" class="container mx-auto p-6">
             <!-- User Role Badge -->
             <section class="mb-6">
                 <div class="bg-white p-4 rounded-lg shadow flex justify-between items-center">
@@ -491,7 +653,7 @@
             </section>
         </main>
 
-        <footer class="bg-blue-600 p-4 text-white text-center mt-10">
+        <footer id="mainFooter" class="bg-blue-600 p-4 text-white text-center mt-10 dark:bg-gray-800 transition-colors duration-300">
             <p>&copy; 2025 Nutritional Insights. All Rights Reserved.</p>
             <p class="mt-2 font-semibold">Group 7</p>
             <p class="mt-1">Annie · Komalpreet · Rhailyn Jane</p>
@@ -520,6 +682,116 @@
         let dietTypesData = [];
         let topProteinRecipes = [];
         let rawCSVData = [];
+
+        // ============================================
+        // DARK MODE FUNCTIONALITY
+        // ============================================
+        let isDarkMode = localStorage.getItem('darkMode') === 'true';
+
+        function initDarkMode() {
+            if (isDarkMode) {
+                document.body.classList.add('dark-mode');
+                updateDarkModeUI(true);
+            }
+        }
+
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', isDarkMode);
+            updateDarkModeUI(isDarkMode);
+            updateChartsForDarkMode();
+        }
+
+        function updateDarkModeUI(dark) {
+            const icon = document.getElementById('darkModeIcon');
+            const text = document.getElementById('darkModeText');
+
+            if (dark) {
+                icon.innerHTML = `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"/>
+                </svg>`;
+                text.textContent = 'Light';
+            } else {
+                icon.innerHTML = `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
+                </svg>`;
+                text.textContent = 'Dark';
+            }
+        }
+
+        function updateChartsForDarkMode() {
+            const textColor = isDarkMode ? '#e2e8f0' : '#374151';
+            const gridColor = isDarkMode ? '#4a5568' : '#e5e7eb';
+
+            // Update Plotly charts
+            const plotlyLayout = {
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { color: textColor }
+            };
+
+            try {
+                Plotly.relayout('barChart', plotlyLayout);
+                Plotly.relayout('scatterPlot', plotlyLayout);
+                Plotly.relayout('heatmap', plotlyLayout);
+            } catch (e) {
+                console.log('Charts not yet initialized');
+            }
+
+            // Update Chart.js pie chart
+            if (pieChart) {
+                pieChart.options.plugins.legend.labels.color = textColor;
+                pieChart.update();
+            }
+        }
+
+        // ============================================
+        // ZOOM FUNCTIONALITY
+        // ============================================
+        let currentZoom = parseFloat(localStorage.getItem('zoomLevel')) || 1;
+        const MIN_ZOOM = 0.5;
+        const MAX_ZOOM = 1.5;
+        const ZOOM_STEP = 0.1;
+
+        function initZoom() {
+            applyZoom();
+        }
+
+        function zoomIn() {
+            if (currentZoom < MAX_ZOOM) {
+                currentZoom = Math.min(MAX_ZOOM, currentZoom + ZOOM_STEP);
+                applyZoom();
+            }
+        }
+
+        function zoomOut() {
+            if (currentZoom > MIN_ZOOM) {
+                currentZoom = Math.max(MIN_ZOOM, currentZoom - ZOOM_STEP);
+                applyZoom();
+            }
+        }
+
+        function resetZoom() {
+            currentZoom = 1;
+            applyZoom();
+        }
+
+        function applyZoom() {
+            const container = document.getElementById('zoomContainer');
+            if (container) {
+                container.style.transform = `scale(${currentZoom})`;
+                container.style.transformOrigin = 'top center';
+            }
+            document.getElementById('zoomLevel').textContent = `${Math.round(currentZoom * 100)}%`;
+            localStorage.setItem('zoomLevel', currentZoom);
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initDarkMode();
+            initZoom();
+        });
         let filteredData = [];
         let currentPage = 1;
         const itemsPerPage = 3;

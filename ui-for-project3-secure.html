@@ -163,6 +163,146 @@
             transition: transform 0.3s ease;
         }
 
+        /* ============================================
+           GLOW EFFECTS ON HOVER
+           ============================================ */
+
+        /* Blue elements glow */
+        .bg-blue-600:hover,
+        .bg-blue-500:hover,
+        button.bg-blue-600:hover,
+        a.text-blue-600:hover {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.6), 0 0 40px rgba(59, 130, 246, 0.3) !important;
+        }
+
+        /* Green elements glow */
+        .bg-green-600:hover,
+        .bg-green-500:hover,
+        button.bg-green-600:hover {
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.6), 0 0 40px rgba(16, 185, 129, 0.3) !important;
+        }
+
+        /* Purple elements glow */
+        .bg-purple-600:hover,
+        .bg-purple-500:hover,
+        button.bg-purple-600:hover {
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.6), 0 0 40px rgba(139, 92, 246, 0.3) !important;
+        }
+
+        /* Red elements glow */
+        .bg-red-600:hover,
+        .bg-red-500:hover,
+        button.bg-red-600:hover {
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.6), 0 0 40px rgba(239, 68, 68, 0.3) !important;
+        }
+
+        /* Orange elements glow */
+        .bg-orange-600:hover,
+        .bg-orange-500:hover {
+            box-shadow: 0 0 20px rgba(251, 146, 60, 0.6), 0 0 40px rgba(251, 146, 60, 0.3) !important;
+        }
+
+        /* Yellow elements glow */
+        .bg-yellow-600:hover,
+        .bg-yellow-500:hover,
+        .bg-yellow-400:hover {
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.6), 0 0 40px rgba(251, 191, 36, 0.3) !important;
+        }
+
+        /* Gray/White cards glow */
+        .bg-white:hover,
+        .shadow:hover,
+        .shadow-lg:hover {
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.3), 0 0 30px rgba(99, 102, 241, 0.15) !important;
+            transition: box-shadow 0.3s ease !important;
+        }
+
+        /* Dark mode card glow - brighter */
+        body.dark-mode .bg-white:hover,
+        body.dark-mode .shadow:hover {
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.5), 0 0 40px rgba(99, 102, 241, 0.25) !important;
+        }
+
+        /* Input fields glow on focus */
+        input:focus,
+        select:focus,
+        textarea:focus {
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5), 0 0 30px rgba(59, 130, 246, 0.25) !important;
+            outline: none !important;
+            border-color: #3b82f6 !important;
+        }
+
+        /* Table rows glow */
+        tr:hover {
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.3) !important;
+        }
+
+        /* Chart containers glow */
+        #barChart:hover,
+        #scatterPlot:hover,
+        #heatmap:hover,
+        #pieChart:hover {
+            box-shadow: 0 0 25px rgba(139, 92, 246, 0.4), 0 0 50px rgba(139, 92, 246, 0.2) !important;
+            border-radius: 8px;
+        }
+
+        /* Badges glow in their colors */
+        .rounded-full:hover {
+            transition: box-shadow 0.3s ease !important;
+        }
+
+        .bg-blue-100:hover {
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5) !important;
+        }
+
+        .bg-green-100:hover {
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.5) !important;
+        }
+
+        .bg-purple-100:hover {
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.5) !important;
+        }
+
+        .bg-red-100:hover {
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.5) !important;
+        }
+
+        .bg-yellow-100:hover {
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.5) !important;
+        }
+
+        .bg-orange-100:hover {
+            box-shadow: 0 0 15px rgba(251, 146, 60, 0.5) !important;
+        }
+
+        /* Navigation/header buttons glow */
+        header button:hover {
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.4) !important;
+        }
+
+        /* Links glow */
+        a:hover {
+            text-shadow: 0 0 10px currentColor;
+        }
+
+        /* API result cards glow */
+        .border:hover {
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.3) !important;
+        }
+
+        /* Security status indicators glow */
+        .bg-green-500 {
+            transition: box-shadow 0.3s ease;
+        }
+        .bg-green-500:hover {
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.8), 0 0 30px rgba(16, 185, 129, 0.4) !important;
+        }
+
+        /* Gradient backgrounds glow */
+        .bg-gradient-to-br:hover {
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.3) !important;
+        }
+
         /* Dark mode login section */
         body.dark-mode #loginSection {
             background: linear-gradient(to bottom right, #1a202c, #2d3748) !important;

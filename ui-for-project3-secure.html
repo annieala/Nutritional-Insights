@@ -1106,7 +1106,7 @@
 
         function initializeCharts() {
             // ============================================
-            // BAR CHART - Plotly.js with animations
+            // BAR CHART - Plotly.js with animations & GLOW
             // ============================================
             const barData = [
                 {
@@ -1114,21 +1114,45 @@
                     y: dietTypesData.map(d => d.Protein),
                     name: 'Protein (g)',
                     type: 'bar',
-                    marker: { color: 'rgba(59, 130, 246, 0.8)' }
+                    marker: {
+                        color: 'rgba(59, 130, 246, 0.8)',
+                        line: { color: 'rgba(59, 130, 246, 1)', width: 1 }
+                    },
+                    hoverlabel: {
+                        bgcolor: 'rgba(59, 130, 246, 0.95)',
+                        bordercolor: '#fff',
+                        font: { color: '#fff', size: 12 }
+                    }
                 },
                 {
                     x: dietTypesData.map(d => d.Diet_type),
                     y: dietTypesData.map(d => d.Carbs),
                     name: 'Carbs (g)',
                     type: 'bar',
-                    marker: { color: 'rgba(16, 185, 129, 0.8)' }
+                    marker: {
+                        color: 'rgba(16, 185, 129, 0.8)',
+                        line: { color: 'rgba(16, 185, 129, 1)', width: 1 }
+                    },
+                    hoverlabel: {
+                        bgcolor: 'rgba(16, 185, 129, 0.95)',
+                        bordercolor: '#fff',
+                        font: { color: '#fff', size: 12 }
+                    }
                 },
                 {
                     x: dietTypesData.map(d => d.Diet_type),
                     y: dietTypesData.map(d => d.Fat),
                     name: 'Fat (g)',
                     type: 'bar',
-                    marker: { color: 'rgba(251, 146, 60, 0.8)' }
+                    marker: {
+                        color: 'rgba(251, 146, 60, 0.8)',
+                        line: { color: 'rgba(251, 146, 60, 1)', width: 1 }
+                    },
+                    hoverlabel: {
+                        bgcolor: 'rgba(251, 146, 60, 0.95)',
+                        bordercolor: '#fff',
+                        font: { color: '#fff', size: 12 }
+                    }
                 }
             ];
 
@@ -1138,7 +1162,8 @@
                 legend: { orientation: 'h', y: -0.2 },
                 paper_bgcolor: 'rgba(0,0,0,0)',
                 plot_bgcolor: 'rgba(0,0,0,0)',
-                font: { size: 10 }
+                font: { size: 10 },
+                hovermode: 'closest'
             };
 
             const barConfig = {
@@ -1157,10 +1182,22 @@
                     transition: { duration: 800, easing: 'cubic-in-out' },
                     frame: { duration: 800 }
                 });
+
+                // Add hover glow effect for bars
+                document.getElementById('barChart').on('plotly_hover', function(data) {
+                    const colors = ['59, 130, 246', '16, 185, 129', '251, 146, 60'];
+                    const traceIndex = data.points[0].curveNumber;
+                    const color = colors[traceIndex];
+                    document.getElementById('barChart').style.filter = `drop-shadow(0 0 15px rgba(${color}, 0.6))`;
+                });
+
+                document.getElementById('barChart').on('plotly_unhover', function() {
+                    document.getElementById('barChart').style.filter = 'none';
+                });
             });
 
             // ============================================
-            // SCATTER PLOT - Plotly.js with animations
+            // SCATTER PLOT - Plotly.js with animations & GLOW
             // ============================================
             const scatterData = [{
                 x: topProteinRecipes.map(r => r.protein),
@@ -1171,11 +1208,17 @@
                 text: topProteinRecipes.map(r => `${r.recipe}<br>Diet: ${r.diet}`),
                 hoverinfo: 'text+x+y',
                 marker: {
-                    size: 12,
+                    size: 14,
                     color: topProteinRecipes.map(r => r.protein),
                     colorscale: 'Viridis',
                     showscale: true,
-                    colorbar: { title: 'Protein', thickness: 15 }
+                    colorbar: { title: 'Protein', thickness: 15 },
+                    line: { color: '#fff', width: 2 }
+                },
+                hoverlabel: {
+                    bgcolor: 'rgba(139, 92, 246, 0.95)',
+                    bordercolor: '#fff',
+                    font: { color: '#fff', size: 12 }
                 }
             }];
 
@@ -1189,10 +1232,19 @@
                 hovermode: 'closest'
             };
 
-            Plotly.newPlot('scatterPlot', scatterData, scatterLayout, { responsive: true, displayModeBar: false });
+            Plotly.newPlot('scatterPlot', scatterData, scatterLayout, { responsive: true, displayModeBar: false }).then(() => {
+                // Add hover glow effect for scatter points
+                document.getElementById('scatterPlot').on('plotly_hover', function() {
+                    document.getElementById('scatterPlot').style.filter = 'drop-shadow(0 0 20px rgba(139, 92, 246, 0.7))';
+                });
+
+                document.getElementById('scatterPlot').on('plotly_unhover', function() {
+                    document.getElementById('scatterPlot').style.filter = 'none';
+                });
+            });
 
             // ============================================
-            // HEATMAP - Plotly.js with animations
+            // HEATMAP - Plotly.js with animations & GLOW
             // ============================================
             const nutrients = ['Protein', 'Carbs', 'Fat'];
             const correlationMatrix = [
@@ -1218,7 +1270,12 @@
                 textfont: { size: 14, color: 'black' },
                 hovertemplate: '%{x} vs %{y}: %{z:.2f}<extra></extra>',
                 showscale: true,
-                colorbar: { title: 'Correlation', thickness: 15 }
+                colorbar: { title: 'Correlation', thickness: 15 },
+                hoverlabel: {
+                    bgcolor: 'rgba(99, 102, 241, 0.95)',
+                    bordercolor: '#fff',
+                    font: { color: '#fff', size: 12 }
+                }
             }];
 
             const heatmapLayout = {
@@ -1230,11 +1287,47 @@
                 yaxis: { autorange: 'reversed' }
             };
 
-            Plotly.newPlot('heatmap', heatmapData, heatmapLayout, { responsive: true, displayModeBar: false });
+            Plotly.newPlot('heatmap', heatmapData, heatmapLayout, { responsive: true, displayModeBar: false }).then(() => {
+                // Add hover glow effect for heatmap cells
+                document.getElementById('heatmap').on('plotly_hover', function(data) {
+                    const z = data.points[0].z;
+                    // Red for negative, blue for positive
+                    const color = z < 0 ? '220, 38, 38' : '37, 99, 235';
+                    document.getElementById('heatmap').style.filter = `drop-shadow(0 0 15px rgba(${color}, 0.6))`;
+                });
+
+                document.getElementById('heatmap').on('plotly_unhover', function() {
+                    document.getElementById('heatmap').style.filter = 'none';
+                });
+            });
 
             // ============================================
-            // PIE CHART - Chart.js (kept as is)
+            // PIE CHART - Chart.js with GLOW on hover
             // ============================================
+            const pieColors = [
+                'rgba(59, 130, 246, 0.8)',
+                'rgba(16, 185, 129, 0.8)',
+                'rgba(251, 146, 60, 0.8)',
+                'rgba(139, 92, 246, 0.8)',
+                'rgba(236, 72, 153, 0.8)'
+            ];
+
+            const pieHoverColors = [
+                'rgba(59, 130, 246, 1)',
+                'rgba(16, 185, 129, 1)',
+                'rgba(251, 146, 60, 1)',
+                'rgba(139, 92, 246, 1)',
+                'rgba(236, 72, 153, 1)'
+            ];
+
+            const pieGlowColors = [
+                '59, 130, 246',
+                '16, 185, 129',
+                '251, 146, 60',
+                '139, 92, 246',
+                '236, 72, 153'
+            ];
+
             const pieCtx = document.getElementById('pieChart').getContext('2d');
             pieChart = new Chart(pieCtx, {
                 type: 'pie',
@@ -1242,15 +1335,12 @@
                     labels: dietTypesData.map(d => d.Diet_type),
                     datasets: [{
                         data: dietTypesData.map(d => d.recipes),
-                        backgroundColor: [
-                            'rgba(59, 130, 246, 0.8)',
-                            'rgba(16, 185, 129, 0.8)',
-                            'rgba(251, 146, 60, 0.8)',
-                            'rgba(139, 92, 246, 0.8)',
-                            'rgba(236, 72, 153, 0.8)'
-                        ],
-                        borderWidth: 2,
-                        borderColor: '#fff'
+                        backgroundColor: pieColors,
+                        hoverBackgroundColor: pieHoverColors,
+                        borderWidth: 3,
+                        borderColor: '#fff',
+                        hoverBorderWidth: 4,
+                        hoverOffset: 15
                     }]
                 },
                 options: {
@@ -1263,6 +1353,16 @@
                         animateRotate: true,
                         animateScale: true,
                         duration: 1000
+                    },
+                    onHover: function(event, elements) {
+                        const canvas = document.getElementById('pieChart');
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const color = pieGlowColors[index % pieGlowColors.length];
+                            canvas.style.filter = `drop-shadow(0 0 20px rgba(${color}, 0.7))`;
+                        } else {
+                            canvas.style.filter = 'none';
+                        }
                     }
                 }
             });

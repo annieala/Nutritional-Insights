@@ -2,6 +2,13 @@
 
 > A secure, scalable web application for nutritional data analysis with enterprise-grade features including OAuth 2.0, RBAC, audit logging, and real-time data visualization.
 
+# Open PowerShell or Command Prompt in the project folder, then run:
+python -m http.server 5500
+
+Then open your browser and go to:
+http://localhost:5500/ui-for-project3-secure.html
+
+
 [![Live Demo](https://img.shields.io/badge/demo-live-green.svg)](#)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](#)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#)

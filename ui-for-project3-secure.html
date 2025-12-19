@@ -526,6 +526,15 @@
 
     <!-- Application Logic -->
     <script>
+        // ============================================
+        // AZURE API CONFIGURATION
+        // ============================================
+        // TODO: Replace with your Azure Function App URL after deployment
+        const API_BASE_URL = 'https://nutritionalinsights-api.azurewebsites.net/api';
+
+        // Set to true to use Azure API, false to use local CSV data
+        const USE_AZURE_API = false;
+
         // Global variables
         let dietTypesData = [];
         let topProteinRecipes = [];
@@ -1127,64 +1136,98 @@
         }
 
         // API Data Interaction Functions
-        function getNutritionalInsights() {
+        async function getNutritionalInsights() {
             const apiResults = document.getElementById('apiResults');
             const apiResultsTitle = document.getElementById('apiResultsTitle');
             const apiResultsContent = document.getElementById('apiResultsContent');
-            
-            // Calculate insights from filtered data
-            const totalRecipes = filteredData.reduce((sum, item) => sum + item.recipes, 0);
-            const avgProtein = filteredData.reduce((sum, item) => sum + item.Protein, 0) / filteredData.length;
-            const avgCarbs = filteredData.reduce((sum, item) => sum + item.Carbs, 0) / filteredData.length;
-            const avgFat = filteredData.reduce((sum, item) => sum + item.Fat, 0) / filteredData.length;
-            
-            const highestProtein = filteredData.reduce((max, item) => item.Protein > max.Protein ? item : max, filteredData[0]);
-            const lowestCarbs = filteredData.reduce((min, item) => item.Carbs < min.Carbs ? item : min, filteredData[0]);
-            
-            apiResultsTitle.textContent = '📊 Nutritional Insights API Response';
-            apiResultsContent.innerHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg">
-                        <h4 class="font-semibold text-blue-800 mb-2">Dataset Overview</h4>
-                        <p class="text-sm"><strong>Total Diet Types:</strong> ${filteredData.length}</p>
-                        <p class="text-sm"><strong>Total Recipes:</strong> ${totalRecipes}</p>
-                        <p class="text-sm"><strong>Data Source:</strong> All_Diets.csv</p>
+            const startTime = performance.now();
+
+            try {
+                let data, totalRecipes, avgProtein, avgCarbs, avgFat, highestProtein, lowestCarbs, dataSource;
+
+                if (USE_AZURE_API) {
+                    // Fetch from Azure Functions API
+                    const response = await fetch(`${API_BASE_URL}/nutrition/summary`);
+                    if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                    const result = await response.json();
+
+                    data = result.data;
+                    totalRecipes = result.total_records;
+                    avgProtein = data.reduce((sum, d) => sum + d.avg_protein, 0) / data.length;
+                    avgCarbs = data.reduce((sum, d) => sum + d.avg_carbs, 0) / data.length;
+                    avgFat = data.reduce((sum, d) => sum + d.avg_fat, 0) / data.length;
+                    highestProtein = data.reduce((max, d) => d.avg_protein > max.avg_protein ? d : max, data[0]);
+                    lowestCarbs = data.reduce((min, d) => d.avg_carbs < min.avg_carbs ? d : min, data[0]);
+                    dataSource = 'Azure Blob Storage';
+                } else {
+                    // Use local filtered data
+                    data = filteredData;
+                    totalRecipes = filteredData.reduce((sum, item) => sum + item.recipes, 0);
+                    avgProtein = filteredData.reduce((sum, item) => sum + item.Protein, 0) / filteredData.length;
+                    avgCarbs = filteredData.reduce((sum, item) => sum + item.Carbs, 0) / filteredData.length;
+                    avgFat = filteredData.reduce((sum, item) => sum + item.Fat, 0) / filteredData.length;
+                    highestProtein = { Diet_type: filteredData.reduce((max, item) => item.Protein > max.Protein ? item : max, filteredData[0]).Diet_type, avg_protein: filteredData.reduce((max, item) => item.Protein > max.Protein ? item : max, filteredData[0]).Protein, recipe_count: filteredData.reduce((max, item) => item.Protein > max.Protein ? item : max, filteredData[0]).recipes };
+                    lowestCarbs = { Diet_type: filteredData.reduce((min, item) => item.Carbs < min.Carbs ? item : min, filteredData[0]).Diet_type, avg_carbs: filteredData.reduce((min, item) => item.Carbs < min.Carbs ? item : min, filteredData[0]).Carbs, recipe_count: filteredData.reduce((min, item) => item.Carbs < min.Carbs ? item : min, filteredData[0]).recipes };
+                    dataSource = 'Local CSV (All_Diets.csv)';
+                }
+
+                const responseTime = Math.round(performance.now() - startTime);
+
+                apiResultsTitle.textContent = '📊 Nutritional Insights API Response';
+                apiResultsContent.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg">
+                            <h4 class="font-semibold text-blue-800 mb-2">Dataset Overview</h4>
+                            <p class="text-sm"><strong>Total Diet Types:</strong> ${USE_AZURE_API ? data.length : filteredData.length}</p>
+                            <p class="text-sm"><strong>Total Recipes:</strong> ${totalRecipes}</p>
+                            <p class="text-sm"><strong>Data Source:</strong> ${dataSource}</p>
+                        </div>
+
+                        <div class="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg">
+                            <h4 class="font-semibold text-green-800 mb-2">Average Nutrients (per diet)</h4>
+                            <p class="text-sm"><strong>Protein:</strong> ${avgProtein.toFixed(2)}g</p>
+                            <p class="text-sm"><strong>Carbohydrates:</strong> ${avgCarbs.toFixed(2)}g</p>
+                            <p class="text-sm"><strong>Fat:</strong> ${avgFat.toFixed(2)}g</p>
+                        </div>
+
+                        <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg">
+                            <h4 class="font-semibold text-purple-800 mb-2">🏆 Highest Protein Diet</h4>
+                            <p class="text-sm"><strong>${USE_AZURE_API ? highestProtein.diet_type : highestProtein.Diet_type}</strong></p>
+                            <p class="text-sm">${(USE_AZURE_API ? highestProtein.avg_protein : highestProtein.avg_protein).toFixed(2)}g protein per serving</p>
+                            <p class="text-sm text-gray-600">${highestProtein.recipe_count} recipes available</p>
+                        </div>
+
+                        <div class="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg">
+                            <h4 class="font-semibold text-orange-800 mb-2">🥗 Lowest Carb Diet</h4>
+                            <p class="text-sm"><strong>${USE_AZURE_API ? lowestCarbs.diet_type : lowestCarbs.Diet_type}</strong></p>
+                            <p class="text-sm">${(USE_AZURE_API ? lowestCarbs.avg_carbs : lowestCarbs.avg_carbs).toFixed(2)}g carbs per serving</p>
+                            <p class="text-sm text-gray-600">${lowestCarbs.recipe_count} recipes available</p>
+                        </div>
                     </div>
-                    
-                    <div class="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg">
-                        <h4 class="font-semibold text-green-800 mb-2">Average Nutrients (per diet)</h4>
-                        <p class="text-sm"><strong>Protein:</strong> ${avgProtein.toFixed(2)}g</p>
-                        <p class="text-sm"><strong>Carbohydrates:</strong> ${avgCarbs.toFixed(2)}g</p>
-                        <p class="text-sm"><strong>Fat:</strong> ${avgFat.toFixed(2)}g</p>
+
+                    <div class="mt-4 p-4 bg-gray-50 rounded border-l-4 border-blue-500">
+                        <p class="text-xs text-gray-600">
+                            <strong>API Endpoint:</strong> <code class="bg-gray-200 px-2 py-1 rounded">${API_BASE_URL}/nutrition/summary</code><br>
+                            <strong>Response Time:</strong> ${responseTime}ms<br>
+                            <strong>Status:</strong> <span class="text-green-600 font-semibold">200 OK</span><br>
+                            <strong>Mode:</strong> ${USE_AZURE_API ? '☁️ Azure Cloud' : '💻 Local Data'}
+                        </p>
                     </div>
-                    
-                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg">
-                        <h4 class="font-semibold text-purple-800 mb-2">🏆 Highest Protein Diet</h4>
-                        <p class="text-sm"><strong>${highestProtein.Diet_type}</strong></p>
-                        <p class="text-sm">${highestProtein.Protein.toFixed(2)}g protein per serving</p>
-                        <p class="text-sm text-gray-600">${highestProtein.recipes} recipes available</p>
+                `;
+
+                apiResults.classList.remove('hidden');
+                apiResults.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } catch (error) {
+                apiResultsTitle.textContent = '❌ API Error';
+                apiResultsContent.innerHTML = `
+                    <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                        <p class="text-red-700"><strong>Error:</strong> ${error.message}</p>
+                        <p class="text-sm text-gray-600 mt-2">Make sure USE_AZURE_API is set correctly and the Azure Function is deployed.</p>
                     </div>
-                    
-                    <div class="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg">
-                        <h4 class="font-semibold text-orange-800 mb-2">🥗 Lowest Carb Diet</h4>
-                        <p class="text-sm"><strong>${lowestCarbs.Diet_type}</strong></p>
-                        <p class="text-sm">${lowestCarbs.Carbs.toFixed(2)}g carbs per serving</p>
-                        <p class="text-sm text-gray-600">${lowestCarbs.recipes} recipes available</p>
-                    </div>
-                </div>
-                
-                <div class="mt-4 p-4 bg-gray-50 rounded border-l-4 border-blue-500">
-                    <p class="text-xs text-gray-600">
-                        <strong>API Endpoint:</strong> <code class="bg-gray-200 px-2 py-1 rounded">/api/nutritional-insights</code><br>
-                        <strong>Response Time:</strong> ${Math.floor(Math.random() * 50 + 50)}ms<br>
-                        <strong>Status:</strong> <span class="text-green-600 font-semibold">200 OK</span>
-                    </p>
-                </div>
-            `;
-            
-            apiResults.classList.remove('hidden');
-            apiResults.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            
+                `;
+                apiResults.classList.remove('hidden');
+            }
+
             // Log API interaction
             if (typeof AuditLogger !== 'undefined') {
                 AuditLogger.logEvent('api_call', {
@@ -1194,159 +1237,225 @@
             }
         }
 
-        function getRecipes() {
+        async function getRecipes() {
             const apiResults = document.getElementById('apiResults');
             const apiResultsTitle = document.getElementById('apiResultsTitle');
             const apiResultsContent = document.getElementById('apiResultsContent');
-            
-            // Get sample recipes from raw CSV data
+            const startTime = performance.now();
             const displayCount = 10;
-            const sampleRecipes = rawCSVData
-                .filter(recipe => {
-                    if (currentFilters.dietType === 'all') return true;
-                    return recipe.Diet_type && recipe.Diet_type.toLowerCase() === currentFilters.dietType;
-                })
-                .slice(0, displayCount);
-            
-            apiResultsTitle.textContent = '🍽️ Recipes API Response';
-            apiResultsContent.innerHTML = `
-                <div class="mb-4 p-3 bg-blue-50 rounded">
-                    <p class="text-sm text-gray-700">
-                        <strong>Query Parameters:</strong> 
-                        Diet Type: <span class="font-semibold">${currentFilters.dietType === 'all' ? 'All' : currentFilters.dietType}</span>, 
-                        Limit: ${displayCount}
-                    </p>
-                </div>
-                
-                <div class="grid grid-cols-1 gap-3 max-h-96 overflow-y-auto">
-                    ${sampleRecipes.map((recipe, index) => `
-                        <div class="border rounded-lg p-4 hover:shadow-md transition bg-white">
-                            <div class="flex justify-between items-start mb-2">
-                                <h4 class="font-semibold text-gray-800">${index + 1}. ${recipe.Recipe_name || 'Untitled Recipe'}</h4>
-                                <span class="text-xs bg-${getDietColor(recipe.Diet_type)}-100 text-${getDietColor(recipe.Diet_type)}-800 px-2 py-1 rounded">
-                                    ${recipe.Diet_type}
-                                </span>
+
+            try {
+                let sampleRecipes;
+
+                if (USE_AZURE_API) {
+                    // Fetch from Azure Functions API
+                    const dietParam = currentFilters.dietType !== 'all' ? `&diet_type=${currentFilters.dietType}` : '';
+                    const response = await fetch(`${API_BASE_URL}/recipes?limit=${displayCount}${dietParam}`);
+                    if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                    const result = await response.json();
+                    sampleRecipes = result.data.map(r => ({
+                        Recipe_name: r.Recipe_name,
+                        Diet_type: r.Diet_type,
+                        'Protein(g)': r['Protein(g)'],
+                        'Carbs(g)': r['Carbs(g)'],
+                        'Fat(g)': r['Fat(g)'],
+                        Cuisine_type: r.Cuisine_type
+                    }));
+                } else {
+                    // Use local CSV data
+                    sampleRecipes = rawCSVData
+                        .filter(recipe => {
+                            if (currentFilters.dietType === 'all') return true;
+                            return recipe.Diet_type && recipe.Diet_type.toLowerCase() === currentFilters.dietType;
+                        })
+                        .slice(0, displayCount);
+                }
+
+                const responseTime = Math.round(performance.now() - startTime);
+
+                apiResultsTitle.textContent = '🍽️ Recipes API Response';
+                apiResultsContent.innerHTML = `
+                    <div class="mb-4 p-3 bg-blue-50 rounded">
+                        <p class="text-sm text-gray-700">
+                            <strong>Query Parameters:</strong>
+                            Diet Type: <span class="font-semibold">${currentFilters.dietType === 'all' ? 'All' : currentFilters.dietType}</span>,
+                            Limit: ${displayCount}
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-3 max-h-96 overflow-y-auto">
+                        ${sampleRecipes.map((recipe, index) => `
+                            <div class="border rounded-lg p-4 hover:shadow-md transition bg-white">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h4 class="font-semibold text-gray-800">${index + 1}. ${recipe.Recipe_name || 'Untitled Recipe'}</h4>
+                                    <span class="text-xs bg-${getDietColor(recipe.Diet_type)}-100 text-${getDietColor(recipe.Diet_type)}-800 px-2 py-1 rounded">
+                                        ${recipe.Diet_type}
+                                    </span>
+                                </div>
+                                <div class="grid grid-cols-3 gap-2 text-sm text-gray-600">
+                                    <div>
+                                        <span class="font-semibold text-blue-600">Protein:</span> ${recipe['Protein(g)']}g
+                                    </div>
+                                    <div>
+                                        <span class="font-semibold text-green-600">Carbs:</span> ${recipe['Carbs(g)']}g
+                                    </div>
+                                    <div>
+                                        <span class="font-semibold text-orange-600">Fat:</span> ${recipe['Fat(g)']}g
+                                    </div>
+                                </div>
+                                ${recipe.Cuisine_type ? `<p class="text-xs text-gray-500 mt-2">🌍 ${recipe.Cuisine_type} Cuisine</p>` : ''}
                             </div>
-                            <div class="grid grid-cols-3 gap-2 text-sm text-gray-600">
-                                <div>
-                                    <span class="font-semibold text-blue-600">Protein:</span> ${recipe['Protein(g)']}g
-                                </div>
-                                <div>
-                                    <span class="font-semibold text-green-600">Carbs:</span> ${recipe['Carbs(g)']}g
-                                </div>
-                                <div>
-                                    <span class="font-semibold text-orange-600">Fat:</span> ${recipe['Fat(g)']}g
-                                </div>
-                            </div>
-                            ${recipe.Cuisine_type ? `<p class="text-xs text-gray-500 mt-2">🌍 ${recipe.Cuisine_type} Cuisine</p>` : ''}
-                        </div>
-                    `).join('')}
-                </div>
-                
-                <div class="mt-4 p-4 bg-gray-50 rounded border-l-4 border-green-500">
-                    <p class="text-xs text-gray-600">
-                        <strong>API Endpoint:</strong> <code class="bg-gray-200 px-2 py-1 rounded">/api/recipes</code><br>
-                        <strong>Records Returned:</strong> ${sampleRecipes.length}<br>
-                        <strong>Response Time:</strong> ${Math.floor(Math.random() * 80 + 40)}ms<br>
-                        <strong>Status:</strong> <span class="text-green-600 font-semibold">200 OK</span>
-                    </p>
-                </div>
-            `;
-            
-            apiResults.classList.remove('hidden');
-            apiResults.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            
+                        `).join('')}
+                    </div>
+
+                    <div class="mt-4 p-4 bg-gray-50 rounded border-l-4 border-green-500">
+                        <p class="text-xs text-gray-600">
+                            <strong>API Endpoint:</strong> <code class="bg-gray-200 px-2 py-1 rounded">${API_BASE_URL}/recipes</code><br>
+                            <strong>Records Returned:</strong> ${sampleRecipes.length}<br>
+                            <strong>Response Time:</strong> ${responseTime}ms<br>
+                            <strong>Status:</strong> <span class="text-green-600 font-semibold">200 OK</span><br>
+                            <strong>Mode:</strong> ${USE_AZURE_API ? '☁️ Azure Cloud' : '💻 Local Data'}
+                        </p>
+                    </div>
+                `;
+
+                apiResults.classList.remove('hidden');
+                apiResults.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } catch (error) {
+                apiResultsTitle.textContent = '❌ API Error';
+                apiResultsContent.innerHTML = `
+                    <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                        <p class="text-red-700"><strong>Error:</strong> ${error.message}</p>
+                        <p class="text-sm text-gray-600 mt-2">Make sure USE_AZURE_API is set correctly and the Azure Function is deployed.</p>
+                    </div>
+                `;
+                apiResults.classList.remove('hidden');
+            }
+
             // Log API interaction
             if (typeof AuditLogger !== 'undefined') {
                 AuditLogger.logEvent('api_call', {
                     endpoint: 'recipes',
-                    resultsCount: sampleRecipes.length
+                    resultsCount: displayCount
                 });
             }
         }
 
-        function getClusters() {
+        async function getClusters() {
             const apiResults = document.getElementById('apiResults');
             const apiResultsTitle = document.getElementById('apiResultsTitle');
             const apiResultsContent = document.getElementById('apiResultsContent');
-            
-            // Cluster diets by macronutrient profiles
-            const clusters = {
-                highProtein: filteredData.filter(d => d.Protein > 30),
-                lowCarb: filteredData.filter(d => d.Carbs < 50),
-                balanced: filteredData.filter(d => d.Protein >= 15 && d.Protein <= 30 && d.Carbs >= 50 && d.Carbs <= 150),
-                highCarb: filteredData.filter(d => d.Carbs > 150),
-            };
-            
-            apiResultsTitle.textContent = '🔬 Diet Clustering API Response';
-            apiResultsContent.innerHTML = `
-                <div class="mb-4 p-3 bg-purple-50 rounded">
-                    <p class="text-sm text-gray-700">
-                        <strong>Clustering Algorithm:</strong> K-Means based on macronutrient profiles<br>
-                        <strong>Features:</strong> Protein, Carbohydrates, Fat content
-                    </p>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="border-2 border-red-200 rounded-lg p-4 bg-red-50">
-                        <h4 class="font-bold text-red-800 mb-2">🥩 High Protein Cluster</h4>
-                        <p class="text-sm text-gray-700 mb-2">Diets with &gt;30g protein per serving</p>
-                        <p class="text-sm"><strong>Count:</strong> ${clusters.highProtein.length} diets</p>
-                        <div class="mt-2 flex flex-wrap gap-1">
-                            ${clusters.highProtein.map(d => `
-                                <span class="text-xs bg-red-200 text-red-800 px-2 py-1 rounded">${d.Diet_type}</span>
-                            `).join('')}
+            const startTime = performance.now();
+
+            try {
+                let clusters, clusterData;
+
+                if (USE_AZURE_API) {
+                    // Fetch from Azure Functions API
+                    const response = await fetch(`${API_BASE_URL}/clusters`);
+                    if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                    const result = await response.json();
+                    clusterData = result.data;
+
+                    // Group by cluster type
+                    clusters = {
+                        highProtein: clusterData.filter(d => d.cluster === 'High Protein'),
+                        lowCarb: clusterData.filter(d => d.cluster === 'High Fat'), // Keto is high fat
+                        balanced: clusterData.filter(d => d.cluster === 'Balanced'),
+                        highCarb: clusterData.filter(d => d.cluster === 'High Carb'),
+                    };
+                } else {
+                    // Use local filtered data
+                    clusters = {
+                        highProtein: filteredData.filter(d => d.Protein > 30),
+                        lowCarb: filteredData.filter(d => d.Carbs < 50),
+                        balanced: filteredData.filter(d => d.Protein >= 15 && d.Protein <= 30 && d.Carbs >= 50 && d.Carbs <= 150),
+                        highCarb: filteredData.filter(d => d.Carbs > 150),
+                    };
+                }
+
+                const responseTime = Math.round(performance.now() - startTime);
+
+                apiResultsTitle.textContent = '🔬 Diet Clustering API Response';
+                apiResultsContent.innerHTML = `
+                    <div class="mb-4 p-3 bg-purple-50 rounded">
+                        <p class="text-sm text-gray-700">
+                            <strong>Clustering Algorithm:</strong> K-Means based on macronutrient profiles<br>
+                            <strong>Features:</strong> Protein, Carbohydrates, Fat content
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="border-2 border-red-200 rounded-lg p-4 bg-red-50">
+                            <h4 class="font-bold text-red-800 mb-2">🥩 High Protein Cluster</h4>
+                            <p class="text-sm text-gray-700 mb-2">Diets with &gt;30g protein per serving</p>
+                            <p class="text-sm"><strong>Count:</strong> ${clusters.highProtein.length} diets</p>
+                            <div class="mt-2 flex flex-wrap gap-1">
+                                ${clusters.highProtein.map(d => `
+                                    <span class="text-xs bg-red-200 text-red-800 px-2 py-1 rounded">${USE_AZURE_API ? d.diet_type : d.Diet_type}</span>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div class="border-2 border-blue-200 rounded-lg p-4 bg-blue-50">
+                            <h4 class="font-bold text-blue-800 mb-2">🥗 Low Carb / High Fat Cluster</h4>
+                            <p class="text-sm text-gray-700 mb-2">Diets with &lt;50g carbs per serving</p>
+                            <p class="text-sm"><strong>Count:</strong> ${clusters.lowCarb.length} diets</p>
+                            <div class="mt-2 flex flex-wrap gap-1">
+                                ${clusters.lowCarb.map(d => `
+                                    <span class="text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded">${USE_AZURE_API ? d.diet_type : d.Diet_type}</span>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div class="border-2 border-green-200 rounded-lg p-4 bg-green-50">
+                            <h4 class="font-bold text-green-800 mb-2">⚖️ Balanced Cluster</h4>
+                            <p class="text-sm text-gray-700 mb-2">Moderate protein (15-30g) and carbs (50-150g)</p>
+                            <p class="text-sm"><strong>Count:</strong> ${clusters.balanced.length} diets</p>
+                            <div class="mt-2 flex flex-wrap gap-1">
+                                ${clusters.balanced.map(d => `
+                                    <span class="text-xs bg-green-200 text-green-800 px-2 py-1 rounded">${USE_AZURE_API ? d.diet_type : d.Diet_type}</span>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div class="border-2 border-yellow-200 rounded-lg p-4 bg-yellow-50">
+                            <h4 class="font-bold text-yellow-800 mb-2">🌾 High Carb Cluster</h4>
+                            <p class="text-sm text-gray-700 mb-2">Diets with &gt;150g carbs per serving</p>
+                            <p class="text-sm"><strong>Count:</strong> ${clusters.highCarb.length} diets</p>
+                            <div class="mt-2 flex flex-wrap gap-1">
+                                ${clusters.highCarb.map(d => `
+                                    <span class="text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded">${USE_AZURE_API ? d.diet_type : d.Diet_type}</span>
+                                `).join('')}
+                            </div>
                         </div>
                     </div>
-                    
-                    <div class="border-2 border-blue-200 rounded-lg p-4 bg-blue-50">
-                        <h4 class="font-bold text-blue-800 mb-2">🥗 Low Carb Cluster</h4>
-                        <p class="text-sm text-gray-700 mb-2">Diets with &lt;50g carbs per serving</p>
-                        <p class="text-sm"><strong>Count:</strong> ${clusters.lowCarb.length} diets</p>
-                        <div class="mt-2 flex flex-wrap gap-1">
-                            ${clusters.lowCarb.map(d => `
-                                <span class="text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded">${d.Diet_type}</span>
-                            `).join('')}
-                        </div>
+
+                    <div class="mt-4 p-4 bg-gray-50 rounded border-l-4 border-purple-500">
+                        <p class="text-xs text-gray-600">
+                            <strong>API Endpoint:</strong> <code class="bg-gray-200 px-2 py-1 rounded">${API_BASE_URL}/clusters</code><br>
+                            <strong>Clusters Generated:</strong> 4<br>
+                            <strong>Total Items Clustered:</strong> ${USE_AZURE_API ? clusterData.length : filteredData.length}<br>
+                            <strong>Response Time:</strong> ${responseTime}ms<br>
+                            <strong>Status:</strong> <span class="text-green-600 font-semibold">200 OK</span><br>
+                            <strong>Mode:</strong> ${USE_AZURE_API ? '☁️ Azure Cloud' : '💻 Local Data'}
+                        </p>
                     </div>
-                    
-                    <div class="border-2 border-green-200 rounded-lg p-4 bg-green-50">
-                        <h4 class="font-bold text-green-800 mb-2">⚖️ Balanced Cluster</h4>
-                        <p class="text-sm text-gray-700 mb-2">Moderate protein (15-30g) and carbs (50-150g)</p>
-                        <p class="text-sm"><strong>Count:</strong> ${clusters.balanced.length} diets</p>
-                        <div class="mt-2 flex flex-wrap gap-1">
-                            ${clusters.balanced.map(d => `
-                                <span class="text-xs bg-green-200 text-green-800 px-2 py-1 rounded">${d.Diet_type}</span>
-                            `).join('')}
-                        </div>
+                `;
+
+                apiResults.classList.remove('hidden');
+                apiResults.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } catch (error) {
+                apiResultsTitle.textContent = '❌ API Error';
+                apiResultsContent.innerHTML = `
+                    <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                        <p class="text-red-700"><strong>Error:</strong> ${error.message}</p>
+                        <p class="text-sm text-gray-600 mt-2">Make sure USE_AZURE_API is set correctly and the Azure Function is deployed.</p>
                     </div>
-                    
-                    <div class="border-2 border-yellow-200 rounded-lg p-4 bg-yellow-50">
-                        <h4 class="font-bold text-yellow-800 mb-2">🌾 High Carb Cluster</h4>
-                        <p class="text-sm text-gray-700 mb-2">Diets with &gt;150g carbs per serving</p>
-                        <p class="text-sm"><strong>Count:</strong> ${clusters.highCarb.length} diets</p>
-                        <div class="mt-2 flex flex-wrap gap-1">
-                            ${clusters.highCarb.map(d => `
-                                <span class="text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded">${d.Diet_type}</span>
-                            `).join('')}
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="mt-4 p-4 bg-gray-50 rounded border-l-4 border-purple-500">
-                    <p class="text-xs text-gray-600">
-                        <strong>API Endpoint:</strong> <code class="bg-gray-200 px-2 py-1 rounded">/api/clusters</code><br>
-                        <strong>Clusters Generated:</strong> 4<br>
-                        <strong>Total Items Clustered:</strong> ${filteredData.length}<br>
-                        <strong>Response Time:</strong> ${Math.floor(Math.random() * 120 + 80)}ms<br>
-                        <strong>Status:</strong> <span class="text-green-600 font-semibold">200 OK</span>
-                    </p>
-                </div>
-            `;
-            
-            apiResults.classList.remove('hidden');
-            apiResults.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            
+                `;
+                apiResults.classList.remove('hidden');
+            }
+
             // Log API interaction
             if (typeof AuditLogger !== 'undefined') {
                 AuditLogger.logEvent('api_call', {

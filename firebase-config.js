@@ -2,13 +2,13 @@
 // Using Firebase Compat SDK (works with CDN)
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCFumPPE-H6pPzr9XSkfIgEowEMzjOzneI",
-  authDomain: "nutritional-insights.firebaseapp.com",
-  projectId: "nutritional-insights",
-  storageBucket: "nutritional-insights.firebasestorage.app",
-  messagingSenderId: "895096134155",
-  appId: "1:895096134155:web:8c940148fbd4650f08450e",
-  measurementId: "G-DMRHS421JY"
+  apiKey:window.APP_CONFIG.firebaseApiKey,
+  authDomain: "nutrition-6b542.firebaseapp.com",
+  projectId: "nutrition-6b542",
+  storageBucket: "nutrition-6b542.firebasestorage.app",
+  messagingSenderId: "211310590588",
+  appId: "1:211310590588:web:6eed4561145ac72b5ae7f9",
+  measurementId: "G-5KR07KY798"
 };
 
 // Initialize Firebase
@@ -36,3 +36,4 @@ window.firebaseApp = {
 };
 
 console.log('Firebase initialized successfully');
+

@@ -1,0 +1,46 @@
+type User @table {
+  username: String!
+  email: String!
+  avatarUrl: String
+  bio: String
+}
+
+type Repository @table {
+  name: String!
+  remoteUrl: String!
+  owner: User!
+  description: String
+  language: String
+}
+
+type Milestone @table {
+  name: String!
+  targetDate: Date!
+  description: String
+  repository: Repository!
+}
+
+type Task @table {
+  title: String!
+  status: String!
+  repository: Repository!
+  description: String
+  priority: String
+  dueDate: Date
+  milestone: Milestone
+}
+
+type PullRequest @table {
+  prNumber: Int!
+  status: String!
+  task: Task!
+  branchName: String
+  author: User
+}
+
+type Insight @table {
+  content: String!
+  task: Task!
+  tag: String
+  createdAt: Timestamp
+}

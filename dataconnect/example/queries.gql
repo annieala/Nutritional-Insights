@@ -1,0 +1,152 @@
+mutation CreateUser($data: User_Data!) @auth(level: USER) {
+  user_insert(data: $data)
+}
+
+mutation UpdateUser($key: User_Key!, $data: User_Data!) @auth(level: USER) {
+  user_update(key: $key, data: $data)
+}
+
+mutation DeleteUser($key: User_Key!) @auth(level: USER) {
+  user_delete(key: $key)
+}
+
+query GetUser($key: User_Key!) @auth(level: USER) {
+  user(key: $key) {
+    username
+    email
+  }
+}
+
+query ListUsers @auth(level: PUBLIC, insecureReason: "Publicly accessible list of users.") {
+  users {
+    username
+  }
+}
+
+mutation CreateRepository($data: Repository_Data!) @auth(level: USER) {
+  repository_insert(data: $data)
+}
+
+mutation UpdateRepository($key: Repository_Key!, $data: Repository_Data!) @auth(level: USER) {
+  repository_update(key: $key, data: $data)
+}
+
+mutation DeleteRepository($key: Repository_Key!) @auth(level: USER) {
+  repository_delete(key: $key)
+}
+
+query GetRepository($key: Repository_Key!) @auth(level: PUBLIC, insecureReason: "Repositories are public.") {
+  repository(key: $key) {
+    name
+    remoteUrl
+  }
+}
+
+query ListRepositories @auth(level: PUBLIC, insecureReason: "Repositories are public.") {
+  repositories {
+    name
+  }
+}
+
+mutation CreateMilestone($data: Milestone_Data!) @auth(level: USER) {
+  milestone_insert(data: $data)
+}
+
+mutation UpdateMilestone($key: Milestone_Key!, $data: Milestone_Data!) @auth(level: USER) {
+  milestone_update(key: $key, data: $data)
+}
+
+mutation DeleteMilestone($key: Milestone_Key!) @auth(level: USER) {
+  milestone_delete(key: $key)
+}
+
+query GetMilestone($key: Milestone_Key!) @auth(level: PUBLIC, insecureReason: "Milestones are public.") {
+  milestone(key: $key) {
+    name
+    targetDate
+  }
+}
+
+query ListMilestones @auth(level: PUBLIC, insecureReason: "Milestones are public.") {
+  milestones {
+    name
+  }
+}
+
+mutation CreateTask($data: Task_Data!) @auth(level: USER) {
+  task_insert(data: $data)
+}
+
+mutation UpdateTask($key: Task_Key!, $data: Task_Data!) @auth(level: USER) {
+  task_update(key: $key, data: $data)
+}
+
+mutation DeleteTask($key: Task_Key!) @auth(level: USER) {
+  task_delete(key: $key)
+}
+
+query GetTask($key: Task_Key!) @auth(level: USER) {
+  task(key: $key) {
+    title
+    status
+  }
+}
+
+query ListTasks @auth(level: USER) {
+  tasks {
+    title
+    status
+  }
+}
+
+mutation CreatePullRequest($data: PullRequest_Data!) @auth(level: USER) {
+  pullRequest_insert(data: $data)
+}
+
+mutation UpdatePullRequest($key: PullRequest_Key!, $data: PullRequest_Data!) @auth(level: USER) {
+  pullRequest_update(key: $key, data: $data)
+}
+
+mutation DeletePullRequest($key: PullRequest_Key!) @auth(level: USER) {
+  pullRequest_delete(key: $key)
+}
+
+query GetPullRequest($key: PullRequest_Key!) @auth(level: USER) {
+  pullRequest(key: $key) {
+    prNumber
+    status
+  }
+}
+
+query ListPullRequests @auth(level: USER) {
+  pullRequests {
+    prNumber
+    status
+  }
+}
+
+mutation CreateInsight($data: Insight_Data!) @auth(level: USER) {
+  insight_insert(data: $data)
+}
+
+mutation UpdateInsight($key: Insight_Key!, $data: Insight_Data!) @auth(level: USER) {
+  insight_update(key: $key, data: $data)
+}
+
+mutation DeleteInsight($key: Insight_Key!) @auth(level: USER) {
+  insight_delete(key: $key)
+}
+
+query GetInsight($key: Insight_Key!) @auth(level: USER) {
+  insight(key: $key) {
+    content
+    tag
+  }
+}
+
+query ListInsights @auth(level: USER) {
+  insights {
+    content
+    tag
+  }
+}

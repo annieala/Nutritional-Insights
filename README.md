@@ -26,7 +26,7 @@ http://localhost:5500/ui-for-project3-secure.html
 
 > **⚠️ Windows Users:** If you get pandas installation errors, use Python 3.11 or 3.12 (NOT 3.13+). [See fix →](#issue-3-modulenotfounderror-or-build-errors-when-installing-pandasnumpy)
 
-> **💡 Quick Tip:** Python is optional! The web app works great without it. Just open `UI-for-project3.html` in your browser.
+> **💡 Quick Tip:** Python is optional! The web app works great without it. Just open `ui-for-project3-secure.html` in your browser.
 
 ---
 
@@ -179,13 +179,13 @@ ls -lh All_Diets.csv
 # Just open the file - that's it!
 
 # Mac:
-open UI-for-project3.html
+open ui-for-project3-secure.html
 
 # Windows:
-start UI-for-project3.html
+start ui-for-project3-secure.html
 
 # Linux:
-xdg-open UI-for-project3.html
+xdg-open ui-for-project3-secure.html
 ```
 
 **✅ Advantages:**
@@ -286,7 +286,7 @@ python data_analysis.py --csv All_Diets.csv --no-show
 ┌─────────────────────────────────────────────────────────────────┐
 │                     PRESENTATION LAYER                           │
 │  ┌──────────────────────────────────────────────────────────┐  │
-│  │  UI-for-project3.html / UI-for-project3-dynamic-csv.html │  │
+│  │  ui-for-project3-secure.html / UI-for-project3-dynamic-csv.html │  │
 │  │  • Chart.js (data visualization)                          │  │
 │  │  • Tailwind CSS (responsive styling)                      │  │
 │  │  • Papa Parse (CSV processing)                            │  │
@@ -605,7 +605,7 @@ GET /clusters
 ```
 nutritional-insights/
 ├── index.html                              # Static version
-├── UI-for-project3.html                    # Main cloud-native frontend
+├── ui-for-project3-secure.html             # Main cloud-native frontend
 ├── UI-for-project3-dynamic-csv.html        # Dynamic CSV version
 ├── All_Diets.csv                           # Dataset (7,806 records)
 │
@@ -640,7 +640,7 @@ nutritional-insights/
 
 ```bash
 # 1. Static Version (Instant)
-open UI-for-project3.html
+open ui-for-project3-secure.html
 
 # 2. Dynamic Version with CSV (Recommended)
 python3 -m http.server 5500

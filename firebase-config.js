@@ -2,7 +2,6 @@
 // Using Firebase Compat SDK (works with CDN)
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCFumPPE-H6pPzr9XSkfIgEowEMzjOzneI",
   authDomain: "nutritional-insights.firebaseapp.com",
   projectId: "nutritional-insights",
   storageBucket: "nutritional-insights.firebasestorage.app",

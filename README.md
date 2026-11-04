@@ -2,7 +2,7 @@
 
 An interactive dashboard for exploring the nutritional makeup of 7,806 recipes across five diet types (Dash, Keto, Mediterranean, Paleo, and Vegan).
 
-**Live demo:** https://nutritional-insights.azurestaticapps.net
+**Live demo:** [https://nutritional-insights.azurestaticapps.net](https://white-sea-001c4090f.6.azurestaticapps.net)
 
 [![Deployed on Azure](https://img.shields.io/badge/deployed%20on-Azure%20Static%20Web%20Apps-0078D4.svg)](https://YOUR-APP-NAME.azurestaticapps.net)
 [![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF.svg)](../../actions)

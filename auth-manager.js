@@ -19,7 +19,6 @@ class AuthManager {
       this.currentUser = user;
       console.log('User signed in:', user.email);
 
-      this.showAuthenticatedUI();      
       // Load user role
       await this.loadUserRole();
       this.showAuthenticatedUI();

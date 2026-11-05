@@ -18,20 +18,24 @@ class AuthManager {
     if (user) {
       this.currentUser = user;
       console.log('User signed in:', user.email);
-      
+
+      this.showAuthenticatedUI();      
       // Load user role
       await this.loadUserRole();
+      this.showAuthenticatedUI();
       
       // Log authentication event
+      try {
       await AuditLogger.logEvent('user_login', {
         userId: user.uid,
         email: user.email,
         provider: user.providerData[0]?.providerId,
         timestamp: new Date().toISOString()
       });
-      
-      // Show authenticated UI
-      this.showAuthenticatedUI();
+    } catch (error) { 
+      console.warn('Audit log failed:', error); 
+    }
+
     } else {
       this.currentUser = null;
       this.userRole = null;

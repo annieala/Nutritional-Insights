@@ -2,4 +2,16 @@
   "dependencies": {
     "firebase": "^13.2.0"
   }
+  
+}
+
+{
+  "name": "nutritional-insights",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "echo \"No build step needed - static site\""
+  },
+  "devDependencies": {
+    "azurite": "^3.0.0"
+  }
 }
